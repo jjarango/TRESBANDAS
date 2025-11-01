@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Contador de Carambolas - Billar Tres Bandas</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            color: white;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Pantalla de inicio */
+        .setup-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            animation: fadeIn 0.5s;
+        }
+
+        .setup-screen h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-align: center;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+
+        .player-selection {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 40px;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        .player-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            padding: 25px;
+            font-size: 1.5em;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+        }
+
+        .player-btn:hover, .player-btn:active {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        /* Pantalla de nombres */
+        .names-screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            padding: 30px 20px;
+            min-height: 100vh;
+            animation: fadeIn 0.5s;
+        }
+
+        .names-screen h2 {
+            font-size: 2em;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .name-inputs {
+            width: 100%;
+            max-width: 400px;
+            margin-bottom: 30px;
+        }
+
+        .name-input-group {
+            margin-bottom: 20px;
+        }
+
+        .name-input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .name-input-group input {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+        }
+
+        .start-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.3em;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .start-btn:hover, .start-btn:active {
+            background: #45a049;
+            transform: scale(1.05);
+        }
+
+        /* Pantalla de juego */
+        .game-screen {
+            display: none;
+            padding: 15px;
+            min-height: 100vh;
+            animation: fadeIn 0.5s;
+        }
+
+        /* Header con información del juego */
+        .game-header {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .timer {
+            font-size: 1.8em;
+            font-weight: bold;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .innings-counter {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .innings-btn {
+            background: #FFC107;
+            color: #333;
+            border: none;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            font-size: 1.5em;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .innings-btn:active {
+            transform: scale(0.95);
+            background: #FFB300;
+        }
+
+        /* Contenedor de jugadores */
+        .players-container {
+            display: grid;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .players-container.players-1 { grid-template-columns: 1fr; }
+        .players-container.players-2 { grid-template-columns: 1fr; }
+        .players-container.players-3 { grid-template-columns: 1fr; }
+        .players-container.players-4 { grid-template-columns: 1fr 1fr; }
+
+        .player-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .player-card.player-1 { 
+            background: linear-gradient(135deg, rgba(255, 87, 87, 0.3), rgba(255, 87, 87, 0.1));
+            border-color: #FF5757;
+        }
+
+        .player-card.player-2 { 
+            background: linear-gradient(135deg, rgba(87, 255, 87, 0.3), rgba(87, 255, 87, 0.1));
+            border-color: #57FF57;
+        }
+
+        .player-card.player-3 { 
+            background: linear-gradient(135deg, rgba(255, 206, 86, 0.3), rgba(255, 206, 86, 0.1));
+            border-color: #FFCE56;
+        }
+
+        .player-card.player-4 { 
+            background: linear-gradient(135deg, rgba(154, 87, 255, 0.3), rgba(154, 87, 255, 0.1));
+            border-color: #9A57FF;
+        }
+
+        .player-name {
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .score-display {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .score-number {
+            font-size: 4.5em;
+            font-weight: bold;
+            line-height: 1;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.4);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .player-1 .score-number { color: #FF5757; }
+        .player-2 .score-number { color: #57FF57; }
+        .player-3 .score-number { color: #FFCE56; }
+        .player-4 .score-number { color: #9A57FF; }
+
+        .score-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .score-btn {
+            width: 60px;
+            height: 60px;
+            border: none;
+            border-radius: 50%;
+            font-size: 2em;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .add-btn {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .add-btn:active {
+            transform: scale(0.9);
+            background: #45a049;
+        }
+
+        .subtract-btn {
+            background: #f44336;
+            color: white;
+            font-size: 1.8em;
+        }
+
+        .subtract-btn:active {
+            transform: scale(0.9);
+            background: #da190b;
+        }
+
+        /* Botones de control */
+        .control-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .control-btn {
+            padding: 12px 25px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .reset-btn {
+            background: #FF9800;
+            color: white;
+        }
+
+        .new-game-btn {
+            background: #9C27B0;
+            color: white;
+        }
+
+        .control-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Animaciones */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        /* Media queries para pantallas más grandes */
+        @media (min-width: 768px) and (orientation: landscape) {
+            .players-container.players-2 { grid-template-columns: 1fr 1fr; }
+            .players-container.players-3 { grid-template-columns: repeat(3, 1fr); }
+        }
+
+        @media (min-width: 1024px) {
+            .players-container.players-4 { grid-template-columns: repeat(4, 1fr); }
+        }
+
+        /* Ajustes para iPhone */
+        @supports (-webkit-touch-callout: none) {
+            .score-btn {
+                -webkit-user-select: none;
+            }
+        }
+
+        /* Pantalla de estadísticas finales */
+        .stats-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            animation: fadeIn 0.3s;
+        }
+
+        .stats-modal {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            border-radius: 20px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+
+        .stats-title {
+            font-size: 2em;
+            text-align: center;
+            margin-bottom: 25px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .stats-content {
+            color: white;
+        }
+
+        .game-duration {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .game-duration .label {
+            font-size: 1.1em;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .game-duration .value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #FFCE56;
+        }
+
+        .player-stats {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            border-left: 5px solid;
+        }
+
+        .player-stats.player-1 { border-left-color: #FF5757; }
+        .player-stats.player-2 { border-left-color: #57FF57; }
+        .player-stats.player-3 { border-left-color: #FFCE56; }
+        .player-stats.player-4 { border-left-color: #9A57FF; }
+
+        .player-stats h3 {
+            font-size: 1.4em;
+            margin-bottom: 15px;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .stat-value {
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+
+        .average-value {
+            color: #4CAF50;
+            font-size: 1.4em;
+        }
+
+        .close-stats-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            border-radius: 25px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+            transition: all 0.3s;
+        }
+
+        .close-stats-btn:hover, .close-stats-btn:active {
+            background: #45a049;
+            transform: scale(0.98);
+        }
+
+        .finish-btn {
+            background: #2196F3;
+            color: white;
+        }
+
+        .finish-btn:hover {
+            background: #1976D2;
+        }
+
+        .no-data-warning {
+            background: rgba(255, 152, 0, 0.2);
+            border: 2px solid #FF9800;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            text-align: center;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <!-- Pantalla de selección de jugadores -->
+    <div class="setup-screen" id="setupScreen">
+        <h1>🎱 Tres Bandas</h1>
+        <p class="subtitle">Contador de Carambolas</p>
+        <p style="margin-bottom: 20px;">¿Cuántos jugadores?</p>
+        <div class="player-selection">
+            <button class="player-btn" onclick="selectPlayers(1)">1</button>
+            <button class="player-btn" onclick="selectPlayers(2)">2</button>
+            <button class="player-btn" onclick="selectPlayers(3)">3</button>
+            <button class="player-btn" onclick="selectPlayers(4)">4</button>
+        </div>
+    </div>
+
+    <!-- Pantalla de nombres -->
+    <div class="names-screen" id="namesScreen">
+        <h2>Nombres de los Jugadores</h2>
+        <div class="name-inputs" id="nameInputs"></div>
+        <button class="start-btn" onclick="startGame()">Comenzar Partida</button>
+    </div>
+
+    <!-- Pantalla de juego -->
+    <div class="game-screen" id="gameScreen">
+        <div class="game-header">
+            <div class="game-info">
+                <div class="timer" id="timer">00:00</div>
+                <div class="innings-counter">
+                    <span>Entrada: <strong id="inningsCount">0</strong></span>
+                    <button class="innings-btn" onclick="addInning()">+</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="players-container" id="playersContainer"></div>
+        
+        <div class="control-buttons">
+            <button class="control-btn reset-btn" onclick="resetScores()">Reiniciar Puntos</button>
+            <button class="control-btn finish-btn" onclick="finishGame()">Finalizar Partida</button>
+            <button class="control-btn new-game-btn" onclick="newGame()">Nueva Partida</button>
+        </div>
+    </div>
+
+    <!-- Modal de estadísticas finales -->
+    <div class="stats-overlay" id="statsOverlay">
+        <div class="stats-modal">
+            <h2 class="stats-title">📊 Estadísticas Finales</h2>
+            <div class="stats-content" id="statsContent"></div>
+            <button class="close-stats-btn" onclick="closeStats()">Cerrar</button>
+        </div>
+    </div>
+
+    <script>
+        let numPlayers = 0;
+        let players = [];
+        let startTime = null;
+        let timerInterval = null;
+        let innings = 0;
+        let firstDataEntered = false;
+
+        function selectPlayers(num) {
+            numPlayers = num;
+            showNamesScreen();
+        }
+
+        function showNamesScreen() {
+            document.getElementById('setupScreen').style.display = 'none';
+            document.getElementById('namesScreen').style.display = 'flex';
+            
+            const nameInputs = document.getElementById('nameInputs');
+            nameInputs.innerHTML = '';
+            
+            for (let i = 1; i <= numPlayers; i++) {
+                const inputGroup = document.createElement('div');
+                inputGroup.className = 'name-input-group';
+                inputGroup.innerHTML = `
+                    <label>Jugador ${i}</label>
+                    <input type="text" id="player${i}Name" placeholder="Nombre del jugador ${i}" value="Jugador ${i}">
+                `;
+                nameInputs.appendChild(inputGroup);
+            }
+        }
+
+        function startGame() {
+            players = [];
+            for (let i = 1; i <= numPlayers; i++) {
+                const name = document.getElementById(`player${i}Name`).value || `Jugador ${i}`;
+                players.push({
+                    id: i,
+                    name: name,
+                    score: 0
+                });
+            }
+            
+            document.getElementById('namesScreen').style.display = 'none';
+            document.getElementById('gameScreen').style.display = 'block';
+            
+            renderPlayers();
+            firstDataEntered = false;
+            innings = 0;
+            updateInnings();
+        }
+
+        function renderPlayers() {
+            const container = document.getElementById('playersContainer');
+            container.className = `players-container players-${numPlayers}`;
+            container.innerHTML = '';
+            
+            players.forEach(player => {
+                const card = document.createElement('div');
+                card.className = `player-card player-${player.id}`;
+                card.innerHTML = `
+                    <div class="player-name">${player.name}</div>
+                    <div class="score-display">
+                        <div class="score-number" id="score${player.id}">${player.score}</div>
+                        <div class="score-controls">
+                            <button class="score-btn add-btn" onclick="addScore(${player.id})">+</button>
+                            <button class="score-btn subtract-btn" onclick="subtractScore(${player.id})">−</button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function startTimer() {
+            if (!startTime) {
+                startTime = Date.now();
+                timerInterval = setInterval(updateTimer, 1000);
+            }
+        }
+
+        function updateTimer() {
+            if (!startTime) return;
+            
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            
+            document.getElementById('timer').textContent = 
+                `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        function addScore(playerId) {
+            if (!firstDataEntered) {
+                firstDataEntered = true;
+                startTimer();
+            }
+            
+            const player = players.find(p => p.id === playerId);
+            player.score++;
+            document.getElementById(`score${playerId}`).textContent = player.score;
+            
+            // Animación
+            const scoreElement = document.getElementById(`score${playerId}`);
+            scoreElement.style.animation = 'pulse 0.3s';
+            setTimeout(() => {
+                scoreElement.style.animation = '';
+            }, 300);
+        }
+
+        function subtractScore(playerId) {
+            if (!firstDataEntered) {
+                firstDataEntered = true;
+                startTimer();
+            }
+            
+            const player = players.find(p => p.id === playerId);
+            if (player.score > 0) {
+                player.score--;
+                document.getElementById(`score${playerId}`).textContent = player.score;
+            }
+        }
+
+        function addInning() {
+            if (!firstDataEntered) {
+                firstDataEntered = true;
+                startTimer();
+            }
+            innings++;
+            updateInnings();
+        }
+
+        function updateInnings() {
+            document.getElementById('inningsCount').textContent = innings;
+        }
+
+        function resetScores() {
+            if (confirm('¿Estás seguro de que quieres reiniciar todos los puntos?')) {
+                players.forEach(player => {
+                    player.score = 0;
+                    document.getElementById(`score${player.id}`).textContent = 0;
+                });
+                
+                // Reiniciar timer y entradas
+                clearInterval(timerInterval);
+                startTime = null;
+                timerInterval = null;
+                firstDataEntered = false;
+                innings = 0;
+                updateInnings();
+                document.getElementById('timer').textContent = '00:00';
+            }
+        }
+
+        function newGame() {
+            if (confirm('¿Estás seguro de que quieres comenzar una nueva partida?')) {
+                clearInterval(timerInterval);
+                startTime = null;
+                timerInterval = null;
+                firstDataEntered = false;
+                innings = 0;
+                
+                document.getElementById('gameScreen').style.display = 'none';
+                document.getElementById('setupScreen').style.display = 'flex';
+            }
+        }
+
+        function finishGame() {
+            // Detener el timer
+            clearInterval(timerInterval);
+            
+            // Calcular duración
+            let durationText = '00:00';
+            if (startTime) {
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                const minutes = Math.floor(elapsed / 60);
+                const seconds = elapsed % 60;
+                durationText = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            }
+            
+            // Generar HTML de estadísticas
+            let statsHTML = `
+                <div class="game-duration">
+                    <div class="label">Duración de la partida</div>
+                    <div class="value">${durationText}</div>
+                </div>
+            `;
+            
+            // Agregar estadísticas de cada jugador
+            players.forEach(player => {
+                let average = 0;
+                let averageText = '0.000';
+                
+                if (innings > 0) {
+                    average = player.score / innings;
+                    averageText = average.toFixed(3);
+                } else {
+                    averageText = 'N/A';
+                }
+                
+                statsHTML += `
+                    <div class="player-stats player-${player.id}">
+                        <h3>${player.name}</h3>
+                        <div class="stat-row">
+                            <span class="stat-label">Carambolas:</span>
+                            <span class="stat-value">${player.score}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Promedio:</span>
+                            <span class="stat-value average-value">${averageText}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            // Agregar advertencia si no hay entradas
+            if (innings === 0) {
+                statsHTML += `
+                    <div class="no-data-warning">
+                        ⚠️ No se registraron entradas. El promedio no puede ser calculado.
+                    </div>
+                `;
+            } else {
+                statsHTML += `
+                    <div style="text-align: center; margin-top: 15px; opacity: 0.8;">
+                        Total de entradas: ${innings}
+                    </div>
+                `;
+            }
+            
+            // Mostrar estadísticas
+            document.getElementById('statsContent').innerHTML = statsHTML;
+            document.getElementById('statsOverlay').style.display = 'block';
+        }
+        
+        function closeStats() {
+            document.getElementById('statsOverlay').style.display = 'none';
+        }
+
+        // Prevenir el zoom en iOS
+        document.addEventListener('gesturestart', function(e) {
+            e.preventDefault();
+        });
+        
+        // Prevenir el scroll bounce en iOS
+        document.body.addEventListener('touchmove', function(e) {
+            if (!e.target.classList.contains('scrollable')) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+    </script>
+</body>
+</html>
