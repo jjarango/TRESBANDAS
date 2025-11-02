@@ -156,10 +156,53 @@
             gap: 15px;
         }
 
+        .timer-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
         .timer {
             font-size: 1.8em;
             font-weight: bold;
             font-variant-numeric: tabular-nums;
+            min-width: 80px;
+        }
+
+        .timer.paused-indicator {
+            color: #FFA500;
+            font-size: 1.6em;
+        }
+
+        .pause-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            font-size: 1.3em;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .pause-btn:active {
+            transform: scale(0.95);
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .pause-btn.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .pause-btn.paused {
+            background: rgba(255, 165, 0, 0.5);
+            border-color: #FFA500;
+            animation: glow 1.5s infinite;
         }
 
         .innings-counter {
@@ -345,7 +388,30 @@
             100% { transform: scale(1); }
         }
 
+        @keyframes glow {
+            0% { box-shadow: 0 0 5px rgba(255, 165, 0, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(255, 165, 0, 0.8); }
+            100% { box-shadow: 0 0 5px rgba(255, 165, 0, 0.5); }
+        }
+
         /* Media queries para pantallas más grandes */
+        @media (max-width: 400px) {
+            .timer-section {
+                flex-direction: row;
+                align-items: center;
+            }
+            
+            .timer {
+                font-size: 1.5em;
+            }
+            
+            .pause-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 1.1em;
+            }
+        }
+        
         @media (min-width: 768px) and (orientation: landscape) {
             .players-container.players-2 { grid-template-columns: 1fr 1fr; }
             .players-container.players-3 { grid-template-columns: repeat(3, 1fr); }
@@ -530,7 +596,10 @@
     <div class="game-screen" id="gameScreen">
         <div class="game-header">
             <div class="game-info">
-                <div class="timer" id="timer">00:00</div>
+                <div class="timer-section">
+                    <div class="timer" id="timer">00:00</div>
+                    <button class="pause-btn" id="pauseBtn" onclick="togglePause()" title="Pausar/Reanudar cronómetro">⏸️</button>
+                </div>
                 <div class="innings-counter">
                     <span>Entrada: <strong id="inningsCount">0</strong></span>
                     <button class="innings-btn" onclick="addInning()">+</button>
@@ -563,6 +632,9 @@
         let timerInterval = null;
         let innings = 0;
         let firstDataEntered = false;
+        let isPaused = false;
+        let pausedTime = 0;
+        let pauseStartTime = null;
 
         function selectPlayers(num) {
             numPlayers = num;
@@ -604,7 +676,18 @@
             renderPlayers();
             firstDataEntered = false;
             innings = 0;
+            isPaused = false;
+            pausedTime = 0;
+            pauseStartTime = null;
             updateInnings();
+            const timer = document.getElementById('timer');
+            timer.textContent = '00:00';
+            timer.classList.remove('paused-indicator');
+            const pauseBtn = document.getElementById('pauseBtn');
+            pauseBtn.textContent = '⏸️';
+            pauseBtn.classList.remove('paused');
+            pauseBtn.classList.add('disabled');
+            pauseBtn.title = 'El cronómetro iniciará con el primer dato';
         }
 
         function renderPlayers() {
@@ -633,18 +716,65 @@
             if (!startTime) {
                 startTime = Date.now();
                 timerInterval = setInterval(updateTimer, 1000);
+                // Resetear estado de pausa
+                isPaused = false;
+                pausedTime = 0;
+                pauseStartTime = null;
+                const pauseBtn = document.getElementById('pauseBtn');
+                pauseBtn.textContent = '⏸️';
+                pauseBtn.classList.remove('paused');
+                pauseBtn.classList.remove('disabled');
+                pauseBtn.title = 'Pausar cronómetro';
             }
         }
 
         function updateTimer() {
-            if (!startTime) return;
+            if (!startTime || isPaused) return;
             
-            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const now = Date.now();
+            const totalElapsed = now - startTime - pausedTime;
+            const elapsed = Math.floor(totalElapsed / 1000);
             const minutes = Math.floor(elapsed / 60);
             const seconds = elapsed % 60;
             
             document.getElementById('timer').textContent = 
                 `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        function togglePause() {
+            if (!startTime || !firstDataEntered) {
+                // No hay timer activo
+                return;
+            }
+            
+            const pauseBtn = document.getElementById('pauseBtn');
+            const timer = document.getElementById('timer');
+            
+            if (isPaused) {
+                // Reanudar
+                isPaused = false;
+                // Acumular el tiempo que estuvo pausado
+                if (pauseStartTime) {
+                    pausedTime += Date.now() - pauseStartTime;
+                }
+                pauseBtn.textContent = '⏸️';
+                pauseBtn.classList.remove('paused');
+                pauseBtn.title = 'Pausar cronómetro';
+                timer.classList.remove('paused-indicator');
+                // Quitar indicador de pausa del timer
+                const currentTime = timer.textContent.replace(' ⏸', '');
+                timer.textContent = currentTime;
+            } else {
+                // Pausar
+                isPaused = true;
+                pauseStartTime = Date.now();
+                pauseBtn.textContent = '▶️';
+                pauseBtn.classList.add('paused');
+                pauseBtn.title = 'Reanudar cronómetro';
+                timer.classList.add('paused-indicator');
+                // Agregar indicador de pausa al timer
+                timer.textContent = timer.textContent + ' ⏸';
+            }
         }
 
         function addScore(playerId) {
@@ -704,8 +834,18 @@
                 timerInterval = null;
                 firstDataEntered = false;
                 innings = 0;
+                isPaused = false;
+                pausedTime = 0;
+                pauseStartTime = null;
                 updateInnings();
-                document.getElementById('timer').textContent = '00:00';
+                const timer = document.getElementById('timer');
+                timer.textContent = '00:00';
+                timer.classList.remove('paused-indicator');
+                const pauseBtn = document.getElementById('pauseBtn');
+                pauseBtn.textContent = '⏸️';
+                pauseBtn.classList.remove('paused');
+                pauseBtn.classList.add('disabled');
+                pauseBtn.title = 'El cronómetro iniciará con el primer dato';
             }
         }
 
@@ -716,6 +856,9 @@
                 timerInterval = null;
                 firstDataEntered = false;
                 innings = 0;
+                isPaused = false;
+                pausedTime = 0;
+                pauseStartTime = null;
                 
                 document.getElementById('gameScreen').style.display = 'none';
                 document.getElementById('setupScreen').style.display = 'flex';
@@ -723,13 +866,19 @@
         }
 
         function finishGame() {
+            // Si está pausado, acumular el tiempo pausado antes de finalizar
+            if (isPaused && pauseStartTime) {
+                pausedTime += Date.now() - pauseStartTime;
+            }
+            
             // Detener el timer
             clearInterval(timerInterval);
             
             // Calcular duración
             let durationText = '00:00';
             if (startTime) {
-                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                const totalElapsed = Date.now() - startTime - pausedTime;
+                const elapsed = Math.floor(totalElapsed / 1000);
                 const minutes = Math.floor(elapsed / 60);
                 const seconds = elapsed % 60;
                 durationText = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
