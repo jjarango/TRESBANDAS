@@ -2,556 +2,767 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Contador de Billar</title>
-    <!-- Carga de Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Carga de Fuente Inter -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marcador de Billar (Estilo Kozoom)</title>
+    <!-- Carga de Tailwind CSS --><script src="https://cdn.tailwindcss.com"></script>
+    <!-- Carga de la fuente Inter --><link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
-    
     <style>
-        /* Estilos personalizados para asegurar que todo sea enorme y legible */
+        /* Estilo personalizado para la fuente Inter */
         body {
             font-family: 'Inter', sans-serif;
-            /* Evitar el doble toque para zoom en iOS */
-            touch-action: manipulation;
-            /* Evitar que la barra de URL oculte contenido */
-            -webkit-text-size-adjust: 100%;
         }
-
-        /* Clases para los números gigantes (Tacada Actual) */
-        .score-number {
-            /* Escala con la altura de la pantalla (vh) */
-            /* min 6rem, preferido 18vh, max 10rem */
-            font-size: clamp(6rem, 18vh, 10rem);
-            line-height: 1;
-            font-weight: 900; /* Black */
-            color: white;
+        /* Evitar que los inputs de número muestren flechas */
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
         }
-
-        /* Estilo para los botones de añadir puntos */
-        .add-button {
-            /* Escala con la altura de la pantalla (vh) */
-            /* min 4rem, preferido 10vh, max 6rem */
-            font-size: clamp(4rem, 10vh, 6rem);
-            line-height: 1;
-            font-weight: 900;
-            color: rgba(255, 255, 255, 0.7);
-            /* Sombra para dar profundidad */
-            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            transition: all 0.1s ease-in-out;
+        input[type=number] {
+            -moz-appearance: textfield;
         }
-        
-        .add-button:active {
-            /* Efecto al presionar */
-            transform: scale(0.98);
-            color: white;
-            text-shadow: none;
+        /* Resaltado del jugador activo */
+        .player-active {
+            box-shadow: 0 0 20px rgba(250, 204, 21, 0.7); /* Sombra brillante amarilla */
+            border-color: #FACC15; /* Amarillo de Tailwind */
         }
-        
-        /* Botones normales */
-        .btn {
-            @apply py-3 px-6 rounded-lg text-xl font-bold shadow-md transition-transform duration-150;
+        /* NUEVO: Estilo para el fondo del jugador activo */
+        .player-active-bg {
+            background-color: #6a0f13;
         }
-        .btn-primary {
-            @apply bg-yellow-500 text-gray-900;
+        /* Estilos para el texto grande y responsive */
+        .text-score {
+            font-size: 6rem; /* Default para pantallas grandes */
         }
-        .btn-primary:active {
-            @apply bg-yellow-600 scale-95;
+        @media (max-width: 768px) { /* md breakpoint */
+            .text-score {
+                font-size: 4.5rem; /* Para pantallas medianas/pequeñas */
+            }
         }
-        .btn-secondary {
-            @apply bg-gray-700 text-white;
+        @media (max-width: 640px) { /* sm breakpoint */
+            .text-score {
+                font-size: 3.5rem; /* Para móviles */
+            }
         }
-        .btn-secondary:active {
-            @apply bg-gray-600 scale-95;
+        .text-innings {
+            font-size: 4rem;
         }
-        .btn-danger {
-            @apply bg-red-600 text-white;
+        @media (max-width: 768px) {
+            .text-innings {
+                font-size: 3rem;
+            }
         }
-        .btn-danger:active {
-            @apply bg-red-700 scale-95;
-        }
-        
-        /* Clases para los marcadores totales en la barra superior */
-        .total-score-display {
-            @apply text-3xl font-black;
-        }
-
     </style>
 </head>
-<body class="bg-gray-900 text-white overflow-hidden">
+<body class="bg-gray-900 text-white min-h-screen flex flex-col items-center p-2 sm:p-4">
 
-    <!-- 1. PANTALLA DE CONFIGURACIÓN -->
-    <!-- Esta pantalla usa min-h-screen para centrarse verticalmente -->
-    <div id="setup-screen" class="w-full max-w-md mx-auto text-center space-y-6 min-h-screen flex flex-col justify-center items-center p-4">
-        <h1 class="text-4xl font-bold text-yellow-400">Contador de Billar</h1>
-        
-        <!-- Selección de Jugadores -->
-        <div class="space-y-4 w-full">
-            <h2 class="text-2xl">¿Cuántos jugadores?</h2>
-            <div class="grid grid-cols-2 gap-4">
-                <button id="btn-1-player" class="btn btn-secondary">1 Jugador</button>
-                <button id="btn-2-players" class="btn btn-secondary">2 Jugadores</button>
+    <!-- Modal de configuración inicial --><div id="setup-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+        <div class="bg-gray-800 p-8 rounded-lg shadow-xl max-w-sm w-full">
+            <h3 class="text-3xl font-bold mb-6 text-yellow-400 text-center">Configurar Partida</h3>
+            
+            <div class="mb-6">
+                <label for="num-players" class="block text-gray-300 text-lg font-semibold mb-2">Número de jugadores:</label>
+                <select id="num-players" class="w-full p-3 bg-gray-700 text-white rounded-md text-lg focus:outline-none focus:ring-2 focus:ring-yellow-400">
+                    <option value="1">1 Jugador</option>
+                    <option value="2" selected>2 Jugadores</option>
+                </select>
             </div>
+
+            <div class="mb-6">
+                <label for="player1-setup-name" class="block text-gray-300 text-lg font-semibold mb-2">Nombre Jugador 1:</label>
+                <input type="text" id="player1-setup-name" value="Jugador 1" class="w-full p-3 bg-gray-700 text-white rounded-md text-lg focus:outline-none focus:ring-2 focus:ring-yellow-400">
+            </div>
+
+            <div id="player2-setup-container" class="mb-6">
+                <label for="player2-setup-name" class="block text-gray-300 text-lg font-semibold mb-2">Nombre Jugador 2:</label>
+                <input type="text" id="player2-setup-name" value="Jugador 2" class="w-full p-3 bg-gray-700 text-white rounded-md text-lg focus:outline-none focus:ring-2 focus:ring-yellow-400">
+            </div>
+
+            <button id="start-game-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg text-xl shadow-lg transition duration-200">
+                Empezar Partida
+            </button>
         </div>
-        
-        <!-- Nombres de Jugadores -->
-        <div class="space-y-4 w-full">
-            <div id="p1-name-input-group">
-                <label for="p1-name" class="block text-xl mb-2">Nombre Jugador 1</label>
-                <input type="text" id="p1-name" value="Jugador 1" class="w-full p-3 rounded-lg text-gray-900 text-xl">
-            </div>
-            <div id="p2-name-input-group" class="hidden">
-                <label for="p2-name" class="block text-xl mb-2">Nombre Jugador 2</label>
-                <input type="text" id="p2-name" value="Jugador 2" class="w-full p-3 rounded-lg text-gray-900 text-xl">
-            </div>
-        </div>
-        
-        <button id="start-game-btn" class="btn btn-primary w-full">¡Empezar Partida!</button>
     </div>
 
-    <!-- 2. PANTALLA DE JUEGO -->
-    <!-- Esta pantalla usa h-screen para forzarla a ocupar el 100% de la altura del dispositivo -->
-    <div id="game-screen" class="hidden w-full h-screen flex flex-col p-4">
+    <!-- Contenido principal de la aplicación --><div id="app-content" class="w-full max-w-6xl bg-gray-800 rounded-2xl shadow-2xl overflow-hidden hidden">
         
-        <!-- Barra Superior: Timer y Entradas -->
-        <div class="w-full flex justify-between items-center bg-gray-800 p-3 rounded-lg shadow-lg mb-4">
-            <!-- Izquierda: Timer -->
-            <div class="flex items-center space-x-2">
-                <span id="timer" class="text-3xl font-bold text-yellow-400">00:00</span>
-                <button id="pause-timer-btn" class="btn btn-secondary p-2 text-sm leading-none">
-                    <!-- Icono de Pausa/Play -->
-                    <svg id="pause-icon" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 00-1 1v2a1 1 0 001 1h1a1 1 0 001-1V9a1 1 0 00-1-1H7zm5 0a1 1 0 00-1 1v2a1 1 0 001 1h1a1 1 0 001-1V9a1 1 0 00-1-1h-1z" clip-rule="evenodd"></path>
-                    </svg>
-                    <svg id="play-icon" class="w-6 h-6 hidden" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path>
-                    </svg>
-                </button>
-            </div>
+        <!-- ENCABEZADO Y ENTRADAS / RELOJ / AVISO --><header class="bg-black/20 p-3 sm:p-4 text-center border-b border-gray-700">
+            <h1 class="text-2xl sm:text-3xl font-bold text-yellow-400 mb-2">Marcador de Tres Bandas</h1>
             
-            <!-- Centro: Marcadores Totales -->
-            <div class="flex items-center space-x-3">
-                <span class="text-lg font-bold text-gray-400 hidden sm:inline">Carambolas totales:</span>
-                <span id="p1-total-score-display" class="total-score-display text-blue-400">0</span>
-                <span id="p2-total-score-display" class="total-score-display text-red-400 hidden">0</span>
+            <!-- Aviso instructivo --><div class="bg-yellow-800/30 text-yellow-200 text-xs sm:text-sm p-2 rounded-md mb-3 border border-yellow-700">
+                <p>CADA JUGADOR, EN SU TURNO, DEBE MARCAR UN NÚMERO DE CARAMBOLAS.</p>
+                <p>SI NO HIZO NINGUNA, DEBE DAR CLIC EN EL BOTÓN AZUL QUE DICE "Cambiar Turno / Fallo".</p>
             </div>
 
-            <!-- Derecha: Entradas -->
-            <div class="flex flex-col items-end">
-                <span class="text-xl font-bold">ENTRADAS</span>
-                <div class="flex items-center space-x-2">
-                    <span id="inning-count" class="text-4xl font-black text-yellow-400">0</span>
-                    <button id="add-inning-btn" class="bg-yellow-500 text-gray-900 rounded-full w-10 h-10 text-3xl font-bold flex items-center justify-center shadow-lg active:scale-95 transition-transform">+</button>
+            <div class="flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0 sm:space-x-8">
+                <div class="text-center">
+                    <label for="distancia" class="text-sm text-gray-400">Carambolas pactadas:</label>
+                    <input type="number" id="distancia" value="30" class="w-16 sm:w-20 bg-gray-700 text-white text-center text-lg font-bold rounded p-1 focus:outline-none focus:ring-2 focus:ring-yellow-400">
+                </div>
+                
+                <div class="text-center flex-1">
+                    <div id="timer-display" class="text-4xl sm:text-5xl font-black text-white">00:00:00</div>
+                    <div class="text-sm sm:text-lg font-bold text-gray-400 tracking-wider">TIEMPO DE PARTIDA</div>
+                </div>
+
+                <div class="text-center">
+                    <div id="innings-display" class="text-4xl sm:text-5xl font-black text-white">0</div>
+                    <div class="text-sm sm:text-lg font-bold text-gray-400 tracking-wider">ENTRADAS</div>
+                </div>
+            </div>
+        </header>
+
+        <!-- RESUMEN GLOBAL (Tamaño aumentado) --><div class="bg-gray-700/50 p-3 sm:p-4 text-center text-xl sm:text-2xl border-b border-gray-700">
+            <div class="flex flex-col md:flex-row justify-between items-center md:space-x-4">
+                <!-- P1 Summary -->
+                <div class="w-full md:w-2/5 text-center md:text-left mb-2 md:mb-0">
+                    <span id="summary-name1" class="font-bold text-yellow-400">Jugador 1</span>: 
+                    <span id="summary-score1" class="font-bold text-white">0</span>
+                    (<span id="summary-avg1" class="text-gray-300 text-lg sm:text-xl">0.000</span>)
+                </div>
+                
+                <!-- Innings Summary -->
+                <div class="w-full md:w-1/5 text-center font-black text-white order-first md:order-none mb-2 md:mb-0">
+                    Entrada: <span id="summary-innings">0</span>
+                </div>
+
+                <!-- P2 Summary -->
+                <div id="summary-player2" class="w-full md:w-2/5 text-center md:text-right">
+                    <span id="summary-name2" class="font-bold text-yellow-400">Jugador 2</span>: 
+                    <span id="summary-score2" class="font-bold text-white">0</span>
+                    (<span id="summary-avg2" class="text-gray-300 text-lg sm:text-xl">0.000</span>)
                 </div>
             </div>
         </div>
 
-        <!-- Marcadores de Jugadores (Tacada Actual) -->
-        <!-- min-h-0 es crucial para que flex-grow funcione en h-screen en Safari/Firefox -->
-        <div id="scoreboards" class="flex-grow grid grid-cols-1 gap-4 min-h-0">
-            <!-- Jugador 1 -->
-            <div id="p1-card" class="bg-blue-700 rounded-lg flex flex-col justify-between p-4 shadow-xl">
-                <!-- Nombre del Jugador 1 -->
-                <span id="p1-name-display" class="text-4xl font-bold text-center mb-2 truncate">Jugador 1</span>
-                <!-- Tacada Actual J1 -->
-                <span id="p1-score" class="score-number text-center">0</span>
-                <!-- Botón de sumar J1 -->
-                <button id="add-p1-score" class="add-button w-full text-center py-4">+</button>
-            </div>
+        <!-- PANELES DE JUGADORES --><main class="flex flex-col md:flex-row">
             
-            <!-- Jugador 2 (se muestra u oculta) -->
-            <div id="p2-card" class="bg-red-700 rounded-lg flex flex-col justify-between p-4 shadow-xl hidden">
-                <!-- Nombre del Jugador 2 -->
-                <span id="p2-name-display" class="text-4xl font-bold text-center mb-2 truncate">Jugador 2</span>
-                <!-- Tacada Actual J2 -->
-                <span id="p2-score" class="score-number text-center">0</span>
-                <!-- Botón de sumar J2 -->
-                <button id="add-p2-score" class="add-button w-full text-center py-4">+</button>
-            </div>
-        </div>
-        
-        <!-- Aviso persistente (1 Jugador) -->
-        <div id="persistent-notice-p1" class="text-yellow-400 text-center italic mt-4 hidden">
-            <!-- Llenado por JS -->
-        </div>
-        <!-- Aviso persistente (2 Jugadores) -->
-        <div id="persistent-notice-p2" class="text-yellow-400 text-center italic mt-4 hidden">
-            <!-- Llenado por JS -->
-        </div>
+            <!-- JUGADOR 1 --><div id="player1-panel" class="w-full md:w-1/2 p-4 sm:p-6 md:p-8 flex flex-col items-center bg-gray-700/50 border-t-4 border-transparent transition-all duration-300">
+                <input type="text" id="player1-name" value="Jugador 1" class="text-2xl sm:text-3xl font-bold bg-transparent text-white text-center rounded p-2 w-full focus:outline-none focus:ring-2 focus:ring-yellow-400 mb-3 sm:mb-4">
+                
+                <!-- ESTE ES EL MARCADOR DE LA ENTRADA ACTUAL --><div id="score1-display" class="text-score font-black text-yellow-400 my-4 sm:my-8 cursor-pointer" title="Clic para sumar 1 punto">0</div>
+                
+                <div class="text-xl sm:text-3xl font-bold text-white mb-4 sm:mb-6">
+                    Promedio (Total): <span id="avg1-display">0.000</span>
+                </div>
 
-        <!-- Botón de Finalizar -->
-        <button id="finish-game-btn" class="btn btn-danger w-full mt-4">Finalizar Partida</button>
+                <!-- Botones de control del jugador 1 --><div class="flex space-x-2 sm:space-x-3 w-full">
+                    <button id="add-point-1" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 sm:py-4 px-4 sm:px-6 rounded-lg text-base sm:text-lg shadow-lg transition duration-200">
+                        +1 Carambola
+                    </button>
+                    <button id="undo-point-1" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 sm:py-4 px-4 sm:px-5 rounded-lg text-base sm:text-lg shadow-lg transition duration-200" title="Deshacer punto">
+                        &#x21A9; <!-- Flecha de deshacer --></button>
+                </div>
+            </div>
+            
+            <!-- JUGADOR 2 (Solo visible si hay 2 jugadores) --><div id="player2-panel" class="w-full md:w-1/2 p-4 sm:p-6 md:p-8 flex flex-col items-center bg-gray-800/50 border-t-4 border-transparent transition-all duration-300 md:border-l border-gray-700">
+                <input type="text" id="player2-name" value="Jugador 2" class="text-2xl sm:text-3xl font-bold bg-transparent text-white text-center rounded p-2 w-full focus:outline-none focus:ring-2 focus:ring-yellow-400 mb-3 sm:mb-4">
+                
+                <!-- ESTE ES EL MARCADOR DE LA ENTRADA ACTUAL --><div id="score2-display" class="text-score font-black text-yellow-400 my-4 sm:my-8 cursor-pointer" title="Clic para sumar 1 punto">0</div>
+                
+                <div class="text-xl sm:text-3xl font-bold text-white mb-4 sm:mb-6">
+                    Promedio (Total): <span id="avg2-display">0.000</span>
+                </div>
+
+                <!-- Botones de control del jugador 2 --><div class="flex space-x-2 sm:space-x-3 w-full">
+                    <button id="add-point-2" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 sm:py-4 px-4 sm:px-6 rounded-lg text-base sm:text-lg shadow-lg transition duration-200">
+                        +1 Carambola
+                    </button>
+                    <button id="undo-point-2" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 sm:py-4 px-4 sm:px-5 rounded-lg text-base sm:text-lg shadow-lg transition duration-200" title="Deshacer punto">
+                        &#x21A9; <!-- Flecha de deshacer --></button>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- CONTROLES GLOBALES --><footer class="p-3 sm:p-4 bg-black/20 flex flex-col md:flex-row justify-center items-center space-y-3 md:space-y-0 md:space-x-4 border-t border-gray-700">
+            <button id="next-inning-btn" class="w-full md:w-auto bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg text-base sm:text-lg shadow-lg transition duration-200">
+                Cambiar Turno / Fallo
+            </button>
+            <button id="undo-btn" class="w-full md:w-auto bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg text-base sm:text-lg shadow-lg transition duration-200">
+                Deshacer Última Acción
+            </button>
+            <!-- NUEVO BOTÓN DE PAUSA -->
+            <button id="pause-timer-btn" class="w-full md:w-auto bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold py-3 px-6 rounded-lg text-base sm:text-lg shadow-lg transition duration-200">
+                Pausa
+            </button>
+            <button id="finish-game-btn" class="w-full md:w-auto bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg text-base sm:text-lg shadow-lg transition duration-200">
+                Terminar Partida
+            </button>
+            <button id="reset-btn" class="w-full md:w-auto bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg text-base sm:text-lg shadow-lg transition duration-200">
+                Reiniciar Partida
+            </button>
+        </footer>
+
     </div>
 
-    <!-- 3. PANTALLA DE ESTADÍSTICAS -->
-    <!-- Esta pantalla usa min-h-screen para centrarse verticalmente -->
-    <div id="stats-screen" class="hidden w-full max-w-lg mx-auto text-center space-y-6 p-6 bg-gray-800 rounded-lg shadow-xl min-h-screen flex flex-col justify-center items-center">
-        <h1 class="text-4xl font-bold text-yellow-400">Partida Finalizada</h1>
-        
-        <div id="stats-content" class="text-left text-2xl space-y-4 w-full">
-            <p><strong>Duración:</strong> <span id="stats-duration"></span></p>
-            <hr class="border-gray-600">
-            
-            <!-- Stats Jugador 1 -->
-            <div class="space-y-2">
-                <h2 id="stats-p1-name" class="text-3xl font-bold text-blue-400"></h2>
-                <p><strong>Carambolas:</strong> <span id="stats-p1-score"></span></t></p>
-                <p><strong>Promedio:</strong> <span id="stats-p1-avg"></span></p>
-            </div>
-            
-            <!-- Stats Jugador 2 (se muestra u oculta) -->
-            <div id="stats-p2-group" class="space-y-2 hidden">
-                <hr class="border-gray-600">
-                <h2 id="stats-p2-name" class="text-3xl font-bold text-red-400"></h2>
-                <p><strong>Carambolas:</strong> <span id="stats-p2-score"></span></p>
-                <p><strong>Promedio:</strong> <span id="stats-p2-avg"></span></p>
+    <!-- Div para el modal de confirmación y resultados --><div id="confirmation-modal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 hidden">
+        <div class="bg-gray-800 p-8 rounded-lg shadow-xl max-w-sm w-full">
+            <h3 id="modal-title" class="text-2xl font-bold mb-4 text-white">¿Estás seguro?</h3>
+            <p id="modal-message" class="text-gray-300 mb-6">Esta acción no se puede deshacer.</p>
+            <div id="modal-results" class="hidden text-left text-gray-200 space-y-2">
+                <!-- Aquí se mostrarán los resultados de la partida --></div>
+            <div class="flex justify-end space-x-4 mt-6">
+                <button id="modal-cancel-btn" class="px-6 py-2 rounded-lg bg-gray-600 hover:bg-gray-500 text-white font-semibold transition-colors">Cancelar</button>
+                <button id="modal-confirm-btn" class="px-6 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold transition-colors">Confirmar</button>
             </div>
         </div>
-        
-        <button id="new-game-btn" class="btn btn-primary w-full mt-6">Jugar Nueva Partida</button>
     </div>
-    
-    <!-- Modal de Advertencia -->
-    <div id="warning-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center p-4 z-50">
-        <div class="bg-gray-800 p-6 rounded-lg shadow-2xl text-center max-w-sm w-full">
-            <h3 class="text-2xl font-bold text-yellow-400 mb-4">¡Atención!</h3>
-            <p id="warning-message" class="text-xl mb-6"></p>
-            <button id="close-warning-btn" class="btn btn-primary w-full">Entendido</V>
-        </div>
-    </div>
+
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             
-            // --- VARIABLES DE ESTADO ---
-            let playerCount = 1;
-            let player1Name = 'Jugador 1';
-            let player2Name = 'Jugador 2';
-            
-            let p1CurrentInningScore = 0; // Tacada actual J1
-            let p2CurrentInningScore = 0; // Tacada actual J2
-            let p1TotalScore = 0;
-            let p2TotalScore = 0;
-            let innings = 0;
-            
-            let timerInterval = null;
-            let totalSeconds = 0;
-            let isTimerPaused = false;
-            let gameStarted = false; // Para iniciar el timer con la primera acción
+            // --- ESTADO DEL JUEGO ---
+            let state = {
+                score1: 0, // Puntuación total J1
+                score2: 0, // Puntuación total J2
+                inningScore1: 0, // Puntuación de la entrada actual J1
+                inningScore2: 0, // Puntuación de la entrada actual J2
+                innings: 0,
+                currentPlayer: 1, // 1 o 2
+                startTime: null,
+                timerInterval: null,
+                numPlayers: 2, // Por defecto 2 jugadores
+                // NUEVAS PROPIEDADES PARA PAUSA
+                isPaused: false,
+                pausedTime: 0, // Tiempo total en milisegundos que el juego estuvo pausado
+                pauseStartTime: null // Timestamp de cuándo se pausó
+            };
+ 
+            // Historial para deshacer
+            let history = [];
 
-            // Banderas de estado de turno (para advertencias)
-            let p1ScoredThisInning = false; // J1 ya anotó
-            let p2ScoredThisInning = false; // J2 ya anotó
-
-            // --- REFERENCIAS A ELEMENTOS DEL DOM ---
-            
-            // Pantallas
-            const setupScreen = document.getElementById('setup-screen');
-            const gameScreen = document.getElementById('game-screen');
-            const statsScreen = document.getElementById('stats-screen');
-
-            // Configuración
-            const btn1Player = document.getElementById('btn-1-player');
-            const btn2Players = document.getElementById('btn-2-players');
-            const p1NameInput = document.getElementById('p1-name');
-            const p2NameInput = document.getElementById('p2-name');
-            const p1NameInputGroup = document.getElementById('p1-name-input-group');
-            const p2NameInputGroup = document.getElementById('p2-name-input-group');
+            // --- ELEMENTOS DEL DOM ---
+            const appContent = document.getElementById('app-content');
+            const setupModal = document.getElementById('setup-modal');
+            const numPlayersSelect = document.getElementById('num-players');
+            const player1SetupName = document.getElementById('player1-setup-name');
+            const player2SetupName = document.getElementById('player2-setup-name');
+            const player2SetupContainer = document.getElementById('player2-setup-container');
             const startGameBtn = document.getElementById('start-game-btn');
+
+            const score1Display = document.getElementById('score1-display');
+            const score2Display = document.getElementById('score2-display');
+            const avg1Display = document.getElementById('avg1-display');
+            const avg2Display = document.getElementById('avg2-display');
+            const inningsDisplay = document.getElementById('innings-display');
+            const panel1 = document.getElementById('player1-panel');
+            const panel2 = document.getElementById('player2-panel');
+            const player1NameInput = document.getElementById('player1-name');
+            const player2NameInput = document.getElementById('player2-name');
+
+            const timerDisplay = document.getElementById('timer-display');
             
-            // Juego - Barra superior
-            const timerDisplay = document.getElementById('timer');
-            const pauseTimerBtn = document.getElementById('pause-timer-btn');
-            const pauseIcon = document.getElementById('pause-icon');
-            const playIcon = document.getElementById('play-icon');
-            const p1TotalScoreDisplay = document.getElementById('p1-total-score-display');
-            const p2TotalScoreDisplay = document.getElementById('p2-total-score-display');
-            const inningCount = document.getElementById('inning-count');
-            const addInningBtn = document.getElementById('add-inning-btn');
+            // Resumen global
+            const summaryScore1 = document.getElementById('summary-score1');
+            const summaryScore2 = document.getElementById('summary-score2');
+            const summaryAvg1 = document.getElementById('summary-avg1');
+            const summaryAvg2 = document.getElementById('summary-avg2');
+            const summaryInnings = document.getElementById('summary-innings');
+            // NUEVOS ELEMENTOS DEL RESUMEN
+            const summaryName1 = document.getElementById('summary-name1');
+            const summaryName2 = document.getElementById('summary-name2');
+            const summaryPlayer2 = document.getElementById('summary-player2');
 
-            // Juego - Marcadores (Tacada actual)
-            const scoreboards = document.getElementById('scoreboards');
-            const p1Card = document.getElementById('p1-card');
-            const p1NameDisplay = document.getElementById('p1-name-display');
-            const p1Score = document.getElementById('p1-score'); // Tacada
-            const addP1ScoreBtn = document.getElementById('add-p1-score');
-            
-            const p2Card = document.getElementById('p2-card');
-            const p2NameDisplay = document.getElementById('p2-name-display');
-            const p2Score = document.getElementById('p2-score'); // Tacada
-            const addP2ScoreBtn = document.getElementById('add-p2-score');
-
-            // Juego - Avisos persistentes
-            const persistentNoticeP1 = document.getElementById('persistent-notice-p1');
-            const persistentNoticeP2 = document.getElementById('persistent-notice-p2');
-
-            // Juego - Botón Finalizar
+            // Botones
+            const addPoint1Btn = document.getElementById('add-point-1');
+            const addPoint2Btn = document.getElementById('add-point-2');
+            const undoPoint1Btn = document.getElementById('undo-point-1');
+            const undoPoint2Btn = document.getElementById('undo-point-2');
+            const nextInningBtn = document.getElementById('next-inning-btn');
+            const undoBtn = document.getElementById('undo-btn');
+            const resetBtn = document.getElementById('reset-btn');
             const finishGameBtn = document.getElementById('finish-game-btn');
+            // NUEVO BOTÓN
+            const pauseTimerBtn = document.getElementById('pause-timer-btn');
+ 
+            // Modal de confirmación/resultados
+            const modal = document.getElementById('confirmation-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalMessage = document.getElementById('modal-message');
+            const modalResults = document.getElementById('modal-results');
+            const modalCancelBtn = document.getElementById('modal-cancel-btn');
+            const modalConfirmBtn = document.getElementById('modal-confirm-btn');
+            let confirmCallback = null;
 
-            // Estadísticas
-            const statsContent = document.getElementById('stats-content');
-            const statsDuration = document.getElementById('stats-duration');
-            const statsP1Name = document.getElementById('stats-p1-name');
-            const statsP1Score = document.getElementById('stats-p1-score');
-            const statsP1Avg = document.getElementById('stats-p1-avg');
-            const statsP2Group = document.getElementById('stats-p2-group');
-            const statsP2Name = document.getElementById('stats-p2-name');
-            const statsP2Score = document.getElementById('stats-p2-score');
-            const statsP2Avg = document.getElementById('stats-p2-avg');
-            const newGameBtn = document.getElementById('new-game-btn');
-            
-            // Modal
-            const warningModal = document.getElementById('warning-modal');
-            const warningMessage = document.getElementById('warning-message');
-            const closeWarningBtn = document.getElementById('close-warning-btn');
+            // --- FUNCIONES PRINCIPALES ---
 
-            // --- LÓGICA DE CONFIGURACIÓN ---
-            
-            btn1Player.addEventListener('click', () => {
-                playerCount = 1;
-                btn1Player.classList.replace('btn-secondary', 'btn-primary');
-                btn2Players.classList.replace('btn-primary', 'btn-secondary');
-                p2NameInputGroup.classList.add('hidden');
-            });
-            
-            btn2Players.addEventListener('click', () => {
-                playerCount = 2;
-                btn2Players.classList.replace('btn-secondary', 'btn-primary');
-                btn1Player.classList.replace('btn-primary', 'btn-secondary');
-                p2NameInputGroup.classList.remove('hidden');
-            });
-
-            // Seleccionar 1 jugador por defecto
-            btn1Player.click();
-
-            startGameBtn.addEventListener('click', () => {
-                // Leer nombres
-                player1Name = p1NameInput.value || 'Jugador 1';
-                player2Name = p2NameInput.value || 'Jugador 2';
-                
-                // Configurar UI del juego
-                p1NameDisplay.textContent = player1Name;
-                p2NameDisplay.textContent = player2Name;
-                
-                if (playerCount === 1) {
-                    p2Card.classList.add('hidden');
-                    p2TotalScoreDisplay.classList.add('hidden'); // Ocultar total J2
-                    scoreboards.classList.remove('grid-cols-2');
-                    scoreboards.classList.add('grid-cols-1');
-                    
-                    // Aviso persistente 1 Jugador
-                    persistentNoticeP1.textContent = `${player1Name}, recuerde anotar también las entradas.`;
-                    persistentNoticeP1.classList.remove('hidden');
-                    persistentNoticeP2.classList.add('hidden');
-                } else {
-                    p2Card.classList.remove('hidden');
-                    p2TotalScoreDisplay.classList.remove('hidden'); // Mostrar total J2
-                    scoreboards.classList.add('grid-cols-2');
-                    scoreboards.classList.remove('grid-cols-1');
-
-                    // Aviso persistente 2 Jugadores
-                    persistentNoticeP2.textContent = `Solo ${player2Name} debe anotar entradas.`;
-                    persistentNoticeP2.classList.remove('hidden');
-                    persistentNoticeP1.classList.add('hidden');
-                }
-                
-                // Mostrar pantalla de juego
-                setupScreen.classList.add('hidden');
-                gameScreen.classList.remove('hidden');
-            });
-
-            // --- LÓGICA DEL JUEGO ---
-
-            function checkStartTimer() {
-                if (!gameStarted) {
-                    gameStarted = true;
-                    startTimer();
-                }
+            /**
+             * Formatea un tiempo en segundos a HH:MM:SS.
+             */
+            function formatTime(seconds) {
+                const h = String(Math.floor(seconds / 3600)).padStart(2, '0');
+                const m = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
+                const s = String(seconds % 60).padStart(2, '0');
+                return `${h}:${m}:${s}`;
             }
 
-            // Sumar carambola (Botones gigantes)
-            addP1ScoreBtn.addEventListener('click', () => addScore(1));
-            addP2ScoreBtn.addEventListener('click', () => addScore(2));
-            
-            function addScore(playerNum) {
-                checkStartTimer();
-                hideWarning();
-
-                // Lógica de advertencia (Req. 5 corregido)
-                if (playerCount === 2 && playerNum === 1 && p2ScoredThisInning) {
-                    // J1 intenta anotar, pero J2 ya anotó y no se ha sumado la entrada
-                    showWarning(`Antes de anotar, ${player2Name} debe anotar la entrada.`);
-                    return;
-                }
-
-                if (playerNum === 1) {
-                    p1CurrentInningScore++;
-                    p1Score.textContent = p1CurrentInningScore;
-                    p1ScoredThisInning = true;
-                } else {
-                    p2CurrentInningScore++;
-                    p2Score.textContent = p2CurrentInningScore;
-                    p2ScoredThisInning = true;
-                }
-            }
-
-            // Sumar entrada (Botón amarillo)
-            addInningBtn.addEventListener('click', () => {
-                checkStartTimer();
-                hideWarning();
-
-                // 1. Sumar tacadas actuales a los totales
-                p1TotalScore += p1CurrentInningScore;
-                p2TotalScore += p2CurrentInningScore;
-                
-                // 2. Actualizar marcadores totales
-                p1TotalScoreDisplay.textContent = p1TotalScore;
-                p2TotalScoreDisplay.textContent = p2TotalScore;
-
-                // 3. Resetear tacadas actuales
-                p1CurrentInningScore = 0;
-                p2CurrentInningScore = 0;
-                p1Score.textContent = '0';
-                p2Score.textContent = '0';
-
-                // 4. Resetear banderas de turno
-                p1ScoredThisInning = false;
-                p2ScoredThisInning = false;
-
-                // 5. Sumar entrada
-                innings++;
-                inningCount.textContent = innings;
-            });
-
-            // --- LÓGICA DEL TIMER ---
-            
+            /**
+             * Inicia o actualiza el temporizador de la partida.
+             */
             function startTimer() {
-                if (timerInterval) return; // Ya está corriendo
-                isTimerPaused = false;
-                pauseIcon.classList.remove('hidden');
-                playIcon.classList.add('hidden');
-                
-                timerInterval = setInterval(() => {
-                    totalSeconds++;
-                    updateTimerDisplay();
+                if (!state.startTime) {
+                    state.startTime = Date.now();
+                }
+                if (state.timerInterval) {
+                    return; // Ya está corriendo
+                }
+                state.timerInterval = setInterval(() => {
+                    // MODIFICACIÓN: Si está pausado, no actualices el display
+                    if (state.isPaused) return; 
+
+                    // MODIFICACIÓN: Calcular tiempo transcurrido restando el tiempo pausado
+                    const elapsedMs = Date.now() - state.startTime - state.pausedTime;
+                    const elapsedSeconds = Math.floor(elapsedMs / 1000);
+                    timerDisplay.textContent = formatTime(elapsedSeconds);
                 }, 1000);
             }
-            
-            function pauseTimer() {
-                clearInterval(timerInterval);
-                timerInterval = null;
-                isTimerPaused = true;
-                pauseIcon.classList.add('hidden');
-                playIcon.classList.remove('hidden');
+ 
+            /**
+             * Detiene el temporizador.
+             */
+            function stopTimer() {
+                if (state.timerInterval) {
+                    clearInterval(state.timerInterval);
+                    state.timerInterval = null;
+                }
             }
-            
-            function resumeTimer() {
+
+            /**
+             * Guarda el estado actual en el historial.
+             */
+            function saveState() {
+                // Clona el estado para evitar mutaciones.
+                // También clonamos el startTime para mantenerlo en el historial si se deshace un reset.
+                history.push(JSON.parse(JSON.stringify(state)));
+                if (history.length > 50) { // Aumentamos el historial para más deshacer
+                    history.shift(); 
+                }
+            }
+
+            /**
+             * Calcula el promedio de un jugador.
+             */
+            function calculateAvg(score, innings) {
+                if (innings === 0 || score === 0) return '0.000';
+                return (score / innings).toFixed(3);
+            }
+
+            /**
+             * Actualiza toda la UI basada en el estado actual.
+             */
+            function updateDisplay() {
+                // Puntuaciones
+                // MODIFICACIÓN: El display principal ahora muestra la PUNTUACIÓN DE LA ENTRADA
+                score1Display.textContent = state.inningScore1;
+                player1NameInput.value = player1SetupName.value;
+                if (state.numPlayers === 2) {
+                    // MODIFICACIÓN: El display principal ahora muestra la PUNTUACIÓN DE LA ENTRADA
+                    score2Display.textContent = state.inningScore2;
+                    player2NameInput.value = player2SetupName.value;
+                }
+                
+                // Entradas y promedios
+                inningsDisplay.textContent = state.innings;
+
+                // Para calcular el promedio, el jugador solo tiene un promedio si ha completado al menos una entrada.
+                // Si el J1 ha jugado 3 entradas, el J2 ha jugado 2. Cuando el J2 acaba su turno, ambos han jugado 3.
+                // Cuando el J1 está en su turno de la entrada N, él ha jugado N-1 entradas completadas.
+                // Cuando el J2 está en su turno de la entrada N, él ha jugado N-1 entradas completadas.
+                // Cuando el J1 empieza la entrada N+1, ambos han jugado N.
+
+                let p1AvgInnings = 0;
+                let p2AvgInnings = 0;
+
+                if (state.innings > 0) {
+                    if (state.currentPlayer === 1) { // Turno del J1 en la entrada 'state.innings'
+                        p1AvgInnings = state.innings - 1;
+                        p2AvgInnings = state.innings - 1; // El J2 terminó su turno en la entrada anterior
+                    } else { // Turno del J2 en la entrada 'state.innings'
+                        p1AvgInnings = state.innings;
+                        p2AvgInnings = state.innings - 1;
+                    }
+                }
+                
+                // Excepciones para el inicio de la partida y una sola entrada
+                // El promedio se calcula sobre la PUNTUACIÓN TOTAL (state.score1)
+                if (state.innings === 0) {
+                     avg1Display.textContent = '0.000';
+                     avg2Display.textContent = '0.000';
+                } else {
+                    avg1Display.textContent = calculateAvg(state.score1, p1AvgInnings > 0 ? p1AvgInnings : 1);
+                    if (state.numPlayers === 2) {
+                        avg2Display.textContent = calculateAvg(state.score2, p2AvgInnings > 0 ? p2AvgInnings : 1);
+                    }
+                }
+                
+                // MODIFICACIÓN: Se gestionan las clases de fondo por defecto y activa
+                panel1.classList.remove('player-active', 'border-yellow-400', 'player-active-bg');
+                panel2.classList.remove('player-active', 'border-yellow-400', 'player-active-bg');
+                
+                // Restaurar fondos por defecto (asegurándose de quitar el activo)
+                panel1.classList.add('bg-gray-700/50');
+                panel2.classList.add('bg-gray-800/50');
+                panel1.classList.remove('player-active-bg');
+                panel2.classList.remove('player-active-bg');
+
+                if (state.currentPlayer === 1) {
+                    panel1.classList.add('player-active', 'border-yellow-400', 'player-active-bg');
+                    panel1.classList.remove('bg-gray-700/50'); // Quitar el fondo por defecto
+                } else if (state.numPlayers === 2) {
+                    panel2.classList.add('player-active', 'border-yellow-400', 'player-active-bg');
+                    panel2.classList.remove('bg-gray-800/50'); // Quitar el fondo por defecto
+                }
+ 
+                // Actualizar resumen global (PUNTUACIÓN TOTAL)
+                summaryName1.textContent = player1NameInput.value; // NUEVO
+                summaryScore1.textContent = state.score1;
+                summaryAvg1.textContent = calculateAvg(state.score1, p1AvgInnings > 0 ? p1AvgInnings : 1);
+                
+                if (state.numPlayers === 2) { // NUEVA LÓGICA
+                    summaryPlayer2.classList.remove('hidden'); // NUEVO
+                    summaryName2.textContent = player2NameInput.value; // NUEVO
+                    summaryScore2.textContent = state.score2;
+                    summaryAvg2.textContent = calculateAvg(state.score2, p2AvgInnings > 0 ? p2AvgInnings : 1);
+                } else {
+                    summaryPlayer2.classList.add('hidden'); // NUEVO
+                }
+                
+                summaryInnings.textContent = state.innings;
+
+                // Ocultar/mostrar panel del Jugador 2
+                if (state.numPlayers === 1) {
+                    panel2.classList.add('hidden');
+                    panel1.classList.remove('md:w-1/2');
+                    panel1.classList.add('w-full');
+                } else {
+                    panel2.classList.remove('hidden');
+                    panel1.classList.add('md:w-1/2');
+                    panel1.classList.remove('w-full');
+                }
+
+                // Sincronizar botón de pausa (por si se usó "Deshacer")
+                if (state.isPaused) {
+                    pauseTimerBtn.textContent = 'Reanudar';
+                    pauseTimerBtn.classList.remove('bg-yellow-500', 'hover:bg-yellow-600', 'text-gray-900');
+                    pauseTimerBtn.classList.add('bg-green-500', 'hover:bg-green-600', 'text-white');
+                } else {
+                    pauseTimerBtn.textContent = 'Pausa';
+                    pauseTimerBtn.classList.remove('bg-green-500', 'hover:bg-green-600', 'text-white');
+                    pauseTimerBtn.classList.add('bg-yellow-500', 'hover:bg-yellow-600', 'text-gray-900');
+                }
+            }
+ 
+            /**
+             * Muestra un modal de confirmación o resultados.
+             */
+            function showConfirmation(title, message, onConfirm, showResults = false, resultsHtml = '') {
+                modalTitle.textContent = title;
+                modalMessage.textContent = message;
+                modalResults.innerHTML = resultsHtml;
+
+                if (showResults) {
+                    modalMessage.classList.add('hidden');
+                    modalResults.classList.remove('hidden');
+                    modalConfirmBtn.classList.add('hidden'); // No hay confirmación, solo OK
+                    modalCancelBtn.textContent = 'Cerrar';
+                    modalCancelBtn.onclick = hideConfirmation; // Cerrar el modal
+                } else {
+                    modalMessage.classList.remove('hidden');
+                    modalResults.classList.add('hidden');
+                    modalConfirmBtn.classList.remove('hidden');
+                    modalCancelBtn.textContent = 'Cancelar';
+                    modalCancelBtn.onclick = hideConfirmation; // Volver al comportamiento por defecto
+                    confirmCallback = onConfirm;
+                }
+                modal.classList.remove('hidden');
+            }
+
+            /**
+             * Oculta el modal.
+             */
+            function hideConfirmation() {
+                modal.classList.add('hidden');
+                confirmCallback = null;
+                // Restaurar el texto del botón de cancelar por si fue modificado
+                modalCancelBtn.textContent = 'Cancelar';
+            }
+
+
+            // --- MANEJADORES DE EVENTOS ---
+
+            // Configuración inicial
+            numPlayersSelect.addEventListener('change', (e) => {
+                if (e.target.value === '1') {
+                    player2SetupContainer.classList.add('hidden');
+                } else {
+                    player2SetupContainer.classList.remove('hidden');
+                }
+            });
+
+            startGameBtn.addEventListener('click', () => {
+                state.numPlayers = parseInt(numPlayersSelect.value);
+                player1NameInput.value = player1SetupName.value;
+                if (state.numPlayers === 2) {
+                    player2NameInput.value = player2SetupName.value;
+                }
+
+                setupModal.classList.add('hidden');
+                appContent.classList.remove('hidden');
+                initializeGame(); // Inicializa el juego con los nuevos settings
+            });
+
+            // Sumar punto Jugador 1
+            function handleAddPoint1() {
+                saveState();
+                state.score1++; // Suma al total
+                state.inningScore1++; // Suma a la entrada
+                // El jugador sigue activo
+                state.currentPlayer = 1;
+                if (state.innings === 0) { // Si es el primer punto, la entrada es 1
+                    state.innings = 1;
+                }
                 startTimer();
+                updateDisplay();
             }
-            
-            function resetTimer() {
-                clearInterval(timerInterval);
-                timerInterval = null;
-                totalSeconds = 0;
-                gameStarted = false;
-                isTimerPaused = false;
-                updateTimerDisplay();
-                pauseIcon.classList.remove('hidden');
-                playIcon.classList.add('hidden');
-            }
+            addPoint1Btn.addEventListener('click', handleAddPoint1);
+            score1Display.addEventListener('click', handleAddPoint1); // Clic en el número también suma
 
-            function updateTimerDisplay() {
-                const minutes = Math.floor(totalSeconds / 60);
-                const seconds = totalSeconds % 60;
-                timerDisplay.textContent = 
-                    `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            // Sumar punto Jugador 2
+            function handleAddPoint2() {
+                if (state.numPlayers === 1) return; // No hacer nada si es 1 jugador
+                saveState();
+                state.score2++; // Suma al total
+                state.inningScore2++; // Suma a la entrada
+                // El jugador sigue activo
+                state.currentPlayer = 2;
+                if (state.innings === 0) { // Si es el primer punto, la entrada es 1
+                    state.innings = 1;
+                }
+                startTimer();
+                updateDisplay();
             }
+            addPoint2Btn.addEventListener('click', handleAddPoint2);
+            score2Display.addEventListener('click', handleAddPoint2); // Clic en el número también suma
 
+            // Deshacer punto Jugador 1 (Solo si tiene puntos)
+            undoPoint1Btn.addEventListener('click', () => {
+                // MODIFICACIÓN: Debe tener puntos en el total Y en la entrada para deshacer
+                if (state.score1 > 0 && state.inningScore1 > 0) {
+                    saveState();
+                    state.score1--;
+                    state.inningScore1--;
+                    updateDisplay();
+                }
+            });
+
+            // Deshacer punto Jugador 2 (Solo si tiene puntos)
+            undoPoint2Btn.addEventListener('click', () => {
+                if (state.numPlayers === 1) return;
+                // MODIFICACIÓN: Debe tener puntos en el total Y en la entrada para deshacer
+                if (state.score2 > 0 && state.inningScore2 > 0) {
+                    saveState();
+                    state.score2--;
+                    state.inningScore2--;
+                    updateDisplay();
+                }
+            });
+
+            // Siguiente turno / Fallo
+            nextInningBtn.addEventListener('click', () => {
+                saveState();
+                
+                // MODIFICACIÓN: Reiniciar marcadores de entrada
+                state.inningScore1 = 0;
+                state.inningScore2 = 0;
+                
+                if (state.numPlayers === 1) {
+                    state.innings++;
+                } else {
+                    if (state.currentPlayer === 1) {
+                        state.currentPlayer = 2; // Turno del jugador 2
+                    } else {
+                        state.currentPlayer = 1; // Turno del jugador 1
+                        state.innings++; // Incrementa la entrada cuando J2 termina su turno
+                    }
+                }
+                if (state.innings === 0) { // Asegura que la entrada se incremente al menos a 1
+                    state.innings = 1;
+                }
+                startTimer();
+                updateDisplay();
+            });
+
+            // Deshacer última acción (general)
+            undoBtn.addEventListener('click', () => {
+                if (history.length > 0) {
+                    // Si el estado a restaurar no tiene timerInterval (después de un reset, por ejemplo),
+                    // asegurarnos de que el timer se detenga.
+                    const lastState = history.pop();
+                    if (!lastState.timerInterval) {
+                        stopTimer();
+                    }
+                    state = lastState; // Restaura el estado completo
+                    if (state.startTime) { // Reinicia el timer si había un tiempo registrado
+                        startTimer();
+                    } else {
+                        stopTimer(); // Si no hay startTime, asegúrate de que esté parado
+                        timerDisplay.textContent = '00:00:00';
+                    }
+                    updateDisplay();
+                }
+            });
+
+            // NUEVO MANEJADOR DE PAUSA
             pauseTimerBtn.addEventListener('click', () => {
-                if (!gameStarted) return; // No hacer nada si el juego no ha empezado
-                if (isTimerPaused) {
-                    resumeTimer();
-                } else {
-                    pauseTimer();
-                }
-            });
-            
-            // --- LÓGICA DE FIN DE JUEGO Y ESTADÍSTICAS ---
+                if (!state.startTime) return; // No se puede pausar si no ha empezado
 
+                if (state.isPaused) {
+                    // Reanudar
+                    state.isPaused = false;
+                    // Sumar el tiempo que estuvo pausado
+                    if (state.pauseStartTime) {
+                        state.pausedTime += (Date.now() - state.pauseStartTime);
+                    }
+                    state.pauseStartTime = null;
+                    // updateDisplay() se encargará de cambiar el texto del botón
+                } else {
+                    // Pausar
+                    state.isPaused = true;
+                    state.pauseStartTime = Date.now(); // Guardar el momento de la pausa
+                    // updateDisplay() se encargará de cambiar el texto del botón
+                }
+                updateDisplay(); // Llama a updateDisplay para cambiar el botón
+            });
+ 
+            // Terminar partida
             finishGameBtn.addEventListener('click', () => {
-                pauseTimer(); // Detener el timer
-                
-                // Calcular promedios
-                // Evitar división por cero si las entradas son 0
-                const avgP1 = (innings > 0) ? (p1TotalScore / innings).toFixed(3) : '0.000';
-                const avgP2 = (innings > 0) ? (p2TotalScore / innings).toFixed(3) : '0.000';
-                
-                // Llenar estadísticas
-                statsDuration.textContent = timerDisplay.textContent;
-                
-                statsP1Name.textContent = player1Name;
-                statsP1Score.textContent = p1TotalScore;
-                statsP1Avg.textContent = avgP1;
-                
-                if (playerCount === 2) {
-                    statsP2Name.textContent = player2Name;
-                    statsP2Score.textContent = p2TotalScore;
-                    statsP2Avg.textContent = avgP2;
-                    statsP2Group.classList.remove('hidden');
-                } else {
-                    statsP2Group.classList.add('hidden');
+                // Pausar el juego si no lo está, para "congelar" el tiempo de cálculo
+                if (!state.isPaused && state.startTime) {
+                    state.isPaused = true;
+                    state.pauseStartTime = Date.now();
+                    // No cambiar el botón, solo pausar internamente
+                }
+ 
+                let durationSeconds = 0;
+                if (state.startTime) {
+                    let elapsedMs = 0;
+                    if (state.pauseStartTime) { // Si se ha pausado al menos una vez
+                        // El tiempo total jugado es el momento en que se pausó, menos el inicio, menos el tiempo de pausa acumulado
+                        elapsedMs = (state.pauseStartTime - state.startTime) - state.pausedTime;
+                    } else if (state.startTime) { // Si nunca se pausó
+                        elapsedMs = Date.now() - state.startTime;
+                    } else { // Si no ha empezado
+                        elapsedMs = 0;
+                    }
+                    durationSeconds = Math.floor(elapsedMs / 1000);
+                    if (durationSeconds < 0) durationSeconds = 0; // Seguridad
                 }
                 
-                // Mostrar pantalla de estadísticas
-                gameScreen.classList.add('hidden');
-                statsScreen.classList.remove('hidden');
+                const durationFormatted = formatTime(durationSeconds);
+ 
+                // Calcular promedios finales
+                let finalP1Innings = state.innings;
+                let finalP2Innings = state.innings;
+
+                if (state.innings === 0) { // Si no se jugó nada
+                    finalP1Innings = 1;
+                    finalP2Innings = 1;
+                } else if (state.numPlayers === 2) {
+                    // Si la partida terminó con el turno del J1 activo, el J2 tiene una entrada menos completada
+                    if (state.currentPlayer === 1 && state.innings > 0) {
+                        finalP2Innings = state.innings - 1;
+                    }
+                }
+
+                const finalAvg1 = calculateAvg(state.score1, finalP1Innings > 0 ? finalP1Innings : 1);
+                const finalAvg2 = calculateAvg(state.score2, finalP2Innings > 0 ? finalP2Innings : 1);
+
+
+                let resultsHtml = `
+                    <h4 class="text-xl font-bold text-yellow-400 mb-4">Resultados de la Partida:</h4>
+                    <p><strong>Duración:</strong> ${durationFormatted}</p>
+                    <p><strong>Entradas Totales:</strong> ${state.innings}</p>
+                    <hr class="my-3 border-gray-600">
+                    <p><strong>${player1NameInput.value}:</strong></p>
+                    <ul>
+                        <li>Carambolas: ${state.score1}</li>
+                        <li>Promedio: ${finalAvg1}</li>
+                    </ul>
+                `;
+
+                if (state.numPlayers === 2) {
+                    resultsHtml += `
+                        <hr class="my-3 border-gray-600">
+                        <p><strong>${player2NameInput.value}:</strong></p>
+                        <ul>
+                            <li>Carambolas: ${state.score2}</li>
+                            <li>Promedio: ${finalAvg2}</li>
+                        </ul>
+                    `;
+                }
+                
+                showConfirmation('Partida Terminada', '', null, true, resultsHtml);
             });
 
-            // Botón de Nueva Partida
-            newGameBtn.addEventListener('click', () => {
-                // 1. Ocultar estadísticas y mostrar configuración
-                statsScreen.classList.add('hidden');
-                setupScreen.classList.remove('hidden');
-                
-                // 2. Resetear todo el estado del juego
-                p1CurrentInningScore = 0;
-                p2CurrentInningScore = 0;
-                p1TotalScore = 0;
-                p2TotalScore = 0;
-                innings = 0;
-                
-                p1ScoredThisInning = false;
-                p2ScoredThisInning = false;
 
-                // 3. Resetear marcadores visuales
-                p1Score.textContent = '0';
-                p2Score.textContent = '0';
-                p1TotalScoreDisplay.textContent = '0';
-                p2TotalScoreDisplay.textContent = '0';
-                inningCount.textContent = '0';
-                
-                resetTimer();
+            // Resetear partida (MODIFICADO para volver al setup)
+            resetBtn.addEventListener('click', () => {
+                showConfirmation(
+                    'Reiniciar Aplicación', // Título cambiado
+                    '¿Estás seguro de que quieres salir? Volverás a la pantalla de configuración.', // Mensaje cambiado
+                    () => {
+                        stopTimer(); // Detener cualquier reloj
+                        
+                        // Ocultar la app, mostrar el setup
+                        appContent.classList.add('hidden');
+                        setupModal.classList.remove('hidden');
 
-                // 4. Ocultar avisos persistentes
-                persistentNoticeP1.classList.add('hidden');
-                persistentNoticeP2.classList.add('hidden');
+                        // Ocultar el modal de confirmación
+                        hideConfirmation();
+                    }
+                );
+            });
+ 
+            // Eventos del Modal de confirmación (si no es de resultados)
+            modalCancelBtn.addEventListener('click', hideConfirmation);
+            modalConfirmBtn.addEventListener('click', () => {
+                if (confirmCallback) {
+                    confirmCallback();
+                }
             });
 
-            // --- LÓGICA DEL MODAL DE ADVERTENCIA ---
+            /**
+             * Inicializa el estado del juego y la UI.
+             */
+            function initializeGame() {
+                stopTimer(); // Asegurarse de que el timer esté parado antes de resetear
+                state = {
+                    score1: 0,
+                    score2: 0,
+                    inningScore1: 0, // MODIFICACIÓN
+                    inningScore2: 0, // MODIFICACIÓN
+                    innings: 0,
+                    currentPlayer: 1,
+                    startTime: null,
+                    timerInterval: null,
+                    numPlayers: state.numPlayers, // Mantiene el número de jugadores configurado
+                    // RESETEAR NUEVO ESTADO
+                    isPaused: false,
+                    pausedTime: 0,
+                    pauseStartTime: null
+                };
+                history = []; // Limpiar historial al reiniciar
+                timerDisplay.textContent = '00:00:00';
+                updateDisplay();
+            }
 
-            function showWarning(message) {
-                warningMessage.textContent = message;
-                warningModal.classList.remove('hidden');
-            }
-            
-            function hideWarning() {
-                warningModal.classList.add('hidden');
-            }
-            
-            closeWarningBtn.addEventListener('click', hideWarning);
+            // --- INICIALIZACIÓN AL CARGAR LA PÁGINA ---
+            // El modal de setup se muestra primero.
+            // La inicialización del juego se hace después de que el usuario configure.
+            // updateDisplay(); // No es necesario al inicio ya que el modal lo cubre.
         });
     </script>
 </body>
