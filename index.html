@@ -15,18 +15,18 @@
         /* Estilo personalizado para la fuente Inter */
         body {
             font-family: 'Inter', sans-serif;
-            /* MODIFICADO: Bloqueo de gestos táctiles y selección */
-            touch-action: manipulation; /* Evita zoom por doble toque, pero permite scroll si es necesario */
-            -webkit-user-select: none; /* Safari/Chrome: evita seleccionar texto */
+            /* Bloqueo de gestos táctiles y selección */
+            touch-action: manipulation;
+            -webkit-user-select: none;
             -moz-user-select: none;
             -ms-user-select: none;
-            user-select: none; /* Estándar: evita seleccionar texto */
-            overscroll-behavior: none; /* Evita el "rebote" de la página en iOS */
-            overflow: hidden; /* Fija la pantalla para que no se mueva */
+            user-select: none;
+            overscroll-behavior: none;
+            overflow: hidden;
         }
 
         /* Permitir interacción en inputs de texto específicamente */
-        input[type="text"], input[type="number"] {
+        input[type="text"], input[type="number"], select {
             -webkit-user-select: text;
             user-select: text;
         }
@@ -42,8 +42,8 @@
         }
         /* Resaltado del jugador activo */
         .player-active {
-            box-shadow: 0 0 20px rgba(250, 204, 21, 0.7); /* Sombra brillante amarilla */
-            border-color: #FACC15; /* Amarillo de Tailwind */
+            box-shadow: 0 0 20px rgba(250, 204, 21, 0.7);
+            border-color: #FACC15;
         }
         /* Estilo para el fondo del jugador activo */
         .player-active-bg {
@@ -83,7 +83,7 @@
         .clock-segment {
             flex: 1;
             height: 40px;
-            background-color: #1f2937; /* Gris oscuro apagado */
+            background-color: #1f2937;
             border-radius: 2px;
             transition: background-color 0.1s linear;
         }
@@ -115,6 +115,14 @@
                 </select>
             </div>
 
+            <div class="mb-4">
+                <label for="regulatory-timer" class="block text-gray-300 text-sm font-semibold mb-1">¿Timer reglamentario?</label>
+                <select id="regulatory-timer" class="w-full p-2 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400">
+                    <option value="yes" selected>SÍ (40 seg + Alarma)</option>
+                    <option value="no">NO (Cronómetro Libre)</option>
+                </select>
+            </div>
+
             <div class="grid grid-cols-2 gap-4 mb-4">
                 <div>
                     <label for="player1-setup-name" class="block text-gray-300 text-sm font-semibold mb-1">Nombre J1:</label>
@@ -131,11 +139,11 @@
             <div class="grid grid-cols-2 gap-4 mb-6">
                 <div>
                     <label for="setup-target-score" class="block text-yellow-200 text-sm font-semibold mb-1">Carambolas (Meta):</label>
-                    <input type="number" id="setup-target-score" value="30" class="w-full p-2 bg-gray-900 text-white border border-gray-600 rounded-md text-center font-bold text-lg focus:outline-none focus:ring-2 focus:ring-yellow-400">
+                    <input type="number" id="setup-target-score" value="40" class="w-full p-2 bg-gray-900 text-white border border-gray-600 rounded-md text-center font-bold text-lg focus:outline-none focus:ring-2 focus:ring-yellow-400">
                 </div>
                 <div>
                     <label for="setup-target-innings" class="block text-blue-200 text-sm font-semibold mb-1">Entradas (Límite):</label>
-                    <input type="number" id="setup-target-innings" value="40" class="w-full p-2 bg-gray-900 text-white border border-gray-600 rounded-md text-center font-bold text-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    <input type="number" id="setup-target-innings" value="50" class="w-full p-2 bg-gray-900 text-white border border-gray-600 rounded-md text-center font-bold text-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
                 </div>
             </div>
 
@@ -152,7 +160,7 @@
             
             <div id="shot-clock-wrapper" class="w-full max-w-4xl mx-auto mb-4 bg-black border-2 border-gray-700 rounded-lg p-2 flex items-center gap-3 shadow-lg">
                 
-                <button id="init-timer-btn" style="background-color: #183b06;" class="w-12 h-12 text-white font-bold text-xl rounded flex items-center justify-center hover:opacity-90 transition-opacity border border-gray-600" title="Iniciar Timer">
+                <button id="init-timer-btn" style="background-color: #183b06;" class="w-12 h-12 text-white font-bold text-xl rounded flex items-center justify-center hover:opacity-90 transition-opacity border border-gray-600" title="Reiniciar Timer">
                     I
                 </button>
 
@@ -175,7 +183,7 @@
                 <div class="text-center">
                     <div class="text-4xl sm:text-5xl font-black text-white flex items-baseline justify-center">
                         <span id="innings-display">0</span>
-                        <span id="innings-limit-display" class="text-2xl text-gray-500 ml-1 hidden">/ 40</span>
+                        <span id="innings-limit-display" class="text-2xl text-gray-500 ml-1 hidden">/ 50</span>
                     </div>
                     <div class="text-sm sm:text-lg font-bold text-gray-400 tracking-wider">ENTRADAS</div>
                 </div>
@@ -297,7 +305,7 @@
 
 
     <script>
-        // --- MODIFICACIÓN CLAVE: SCRIPT ANTI-ZOOM PARA IPAD ---
+        // --- SCRIPT ANTI-ZOOM PARA IPAD ---
         document.addEventListener('gesturestart', function(e) {
             e.preventDefault();
         });
@@ -307,13 +315,10 @@
         document.addEventListener('gestureend', function(e) {
             e.preventDefault();
         });
-        // Bloquear doble toque solo en el documento general (permitiendo clicks rápidos)
         let lastTouchEnd = 0;
         document.addEventListener('touchend', function (event) {
             const now = (new Date()).getTime();
             if (now - lastTouchEnd <= 300) {
-                // Solo prevenimos si el toque no fue en un input o botón esencial
-                // aunque touch-action:manipulation en CSS hace la mayor parte del trabajo.
                 // event.preventDefault(); 
             }
             lastTouchEnd = now;
@@ -335,13 +340,15 @@
                 isPaused: false,
                 pausedTime: 0,
                 pauseStartTime: null,
-                targetScore: 30,
-                targetInnings: 0,
+                targetScore: 40,
+                targetInnings: 50,
                 
+                // Configuración de Timer
+                regulatoryTimer: true, 
+
                 // --- ESTADO DEL SHOT CLOCK ---
                 shotClockTime: 0,      
-                shotClockInterval: null,
-                shotClockOvertime: false 
+                shotClockInterval: null
             };
  
             // Historial para deshacer
@@ -374,6 +381,9 @@
             const appContent = document.getElementById('app-content');
             const setupModal = document.getElementById('setup-modal');
             const numPlayersSelect = document.getElementById('num-players');
+            // NUEVO SELECTOR
+            const regulatoryTimerSelect = document.getElementById('regulatory-timer');
+            
             const player1SetupName = document.getElementById('player1-setup-name');
             const player2SetupName = document.getElementById('player2-setup-name');
             const player2SetupContainer = document.getElementById('player2-setup-container');
@@ -450,12 +460,19 @@
             function clearShotClock() {
                 if (state.shotClockInterval) clearInterval(state.shotClockInterval);
                 state.shotClockTime = 0;
-                state.shotClockOvertime = false;
-                shotClockNumber.textContent = "40";
+                
+                // Texto inicial depende del modo
+                if (state.regulatoryTimer) {
+                    shotClockNumber.textContent = "40";
+                } else {
+                    shotClockNumber.textContent = "0";
+                }
                 
                 const bars = document.querySelectorAll('.clock-segment');
                 bars.forEach(bar => {
                     bar.className = 'clock-segment'; 
+                    // Limpiar clases específicas
+                    bar.classList.remove('segment-green', 'segment-orange', 'segment-red');
                 });
             }
 
@@ -470,37 +487,50 @@
                 state.shotClockInterval = setInterval(() => {
                     if (state.isPaused) return;
 
-                    // Si estamos en overtime (después de 40s)
-                    if (state.shotClockOvertime) {
-                        state.shotClockTime++;
-                        // Esperar 15 segundos extra
-                        if (state.shotClockTime >= 15) {
-                            playWarningSound();
-                            // --- CAMBIO: REINICIAR AUTOMÁTICAMENTE ---
-                            resetShotClock();
-                        }
+                    // AUMENTAMOS EL TIEMPO SIEMPRE
+                    state.shotClockTime++;
+
+                    // --- LÓGICA DE VISUALIZACIÓN ---
+
+                    // CASO 1: TIMER NO REGLAMENTARIO (Cuenta ascendente infinita)
+                    if (!state.regulatoryTimer) {
+                        shotClockNumber.textContent = state.shotClockTime; // Muestra el tiempo ascendente
+                        updateShotClockVisual(state.shotClockTime);
+                        return; 
+                    }
+
+                    // CASO 2: TIMER REGLAMENTARIO (Cuenta regresiva con Overtime negativo)
+                    // Normal: 40, 39... 0
+                    // Overtime: -1, -2... -15 (Alarma)
+                    
+                    const timeLeft = 40 - state.shotClockTime;
+                    shotClockNumber.textContent = timeLeft;
+
+                    // Alarma a los 15 segundos de overtime (Total 55s)
+                    if (state.shotClockTime >= 55) { 
+                        playWarningSound();
+                        resetShotClock();
                         return;
                     }
 
-                    // Tiempo normal
-                    state.shotClockTime++;
-                    const timeLeft = 40 - state.shotClockTime;
-                    shotClockNumber.textContent = timeLeft >= 0 ? timeLeft : 0;
-
                     // Actualizar barra visual
                     updateShotClockVisual(state.shotClockTime);
-
-                    if (state.shotClockTime >= 40) {
-                        // Iniciar Overtime
-                        state.shotClockOvertime = true;
-                        state.shotClockTime = 0; 
-                    }
 
                 }, 1000);
             }
 
             function updateShotClockVisual(timeElapsed) {
-                if (timeElapsed > 40) return;
+                // MODIFICACIÓN: Si pasamos de 40 (en cualquier modo), TODO ROJO
+                if (timeElapsed > 40) {
+                    const bars = document.querySelectorAll('.clock-segment');
+                    bars.forEach(bar => {
+                        bar.classList.remove('segment-green', 'segment-orange');
+                        bar.classList.add('segment-red');
+                    });
+                    return; 
+                }
+                
+                // Lógica normal (0 a 40 segundos)
                 const barIndex = timeElapsed - 1;
                 const bar = document.getElementById(`seg-${barIndex}`);
                 
@@ -698,6 +728,9 @@
                 state.targetScore = parseInt(setupTargetScore.value) || 0;
                 state.targetInnings = parseInt(setupTargetInnings.value) || 0;
                 
+                // Leer configuración del timer
+                state.regulatoryTimer = (regulatoryTimerSelect.value === 'yes');
+
                 distanciaInput.value = state.targetScore > 0 ? state.targetScore : '';
                 
                 if (state.targetInnings > 0) {
@@ -718,10 +751,18 @@
                     audioCtx.resume();
                 }
 
-                initializeGame(); 
+                initializeGame();
+                
+                // CAMBIOS SOLICITADOS:
+                // 1. Iniciar reloj de partida inmediatamente
+                state.startTime = Date.now();
+                startTimer(); 
+                
+                // 2. Iniciar timer de jugada inmediatamente
+                resetShotClock(); 
             });
 
-            // BOTÓN "I" -> INICIA TIMER POR PRIMERA VEZ
+            // BOTÓN "I" -> INICIA/REINICIA TIMER MANUALMENTE
             initTimerBtn.addEventListener('click', () => {
                 resetShotClock();
             });
@@ -918,14 +959,17 @@
                     startTime: null,
                     timerInterval: null,
                     numPlayers: state.numPlayers,
+                    
+                    // Aseguramos que la configuración elegida en el modal se mantenga
+                    regulatoryTimer: state.regulatoryTimer,
+
                     isPaused: false,
                     pausedTime: 0,
                     pauseStartTime: null,
                     targetScore: state.targetScore,
                     targetInnings: state.targetInnings,
                     shotClockTime: 0,
-                    shotClockInterval: null,
-                    shotClockOvertime: false
+                    shotClockInterval: null
                 };
                 history = []; 
                 timerDisplay.textContent = '00:00:00';
