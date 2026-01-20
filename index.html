@@ -343,6 +343,12 @@
                 targetScore: 40,
                 targetInnings: 50,
                 
+                // NUEVAS ESTADÍSTICAS
+                highRun1: 0,
+                highRun2: 0,
+                zeros1: 0,
+                zeros2: 0,
+
                 // Configuración de Timer
                 regulatoryTimer: true, 
 
@@ -381,7 +387,6 @@
             const appContent = document.getElementById('app-content');
             const setupModal = document.getElementById('setup-modal');
             const numPlayersSelect = document.getElementById('num-players');
-            // NUEVO SELECTOR
             const regulatoryTimerSelect = document.getElementById('regulatory-timer');
             
             const player1SetupName = document.getElementById('player1-setup-name');
@@ -461,7 +466,6 @@
                 if (state.shotClockInterval) clearInterval(state.shotClockInterval);
                 state.shotClockTime = 0;
                 
-                // Texto inicial depende del modo
                 if (state.regulatoryTimer) {
                     shotClockNumber.textContent = "40";
                 } else {
@@ -471,7 +475,6 @@
                 const bars = document.querySelectorAll('.clock-segment');
                 bars.forEach(bar => {
                     bar.className = 'clock-segment'; 
-                    // Limpiar clases específicas
                     bar.classList.remove('segment-green', 'segment-orange', 'segment-red');
                 });
             }
@@ -487,40 +490,31 @@
                 state.shotClockInterval = setInterval(() => {
                     if (state.isPaused) return;
 
-                    // AUMENTAMOS EL TIEMPO SIEMPRE
                     state.shotClockTime++;
 
-                    // --- LÓGICA DE VISUALIZACIÓN ---
-
-                    // CASO 1: TIMER NO REGLAMENTARIO (Cuenta ascendente infinita)
+                    // TIMER NO REGLAMENTARIO
                     if (!state.regulatoryTimer) {
-                        shotClockNumber.textContent = state.shotClockTime; // Muestra el tiempo ascendente
+                        shotClockNumber.textContent = state.shotClockTime; 
                         updateShotClockVisual(state.shotClockTime);
                         return; 
                     }
 
-                    // CASO 2: TIMER REGLAMENTARIO (Cuenta regresiva con Overtime negativo)
-                    // Normal: 40, 39... 0
-                    // Overtime: -1, -2... -15 (Alarma)
-                    
+                    // TIMER REGLAMENTARIO
                     const timeLeft = 40 - state.shotClockTime;
                     shotClockNumber.textContent = timeLeft;
 
-                    // Alarma a los 15 segundos de overtime (Total 55s)
                     if (state.shotClockTime >= 55) { 
                         playWarningSound();
                         resetShotClock();
                         return;
                     }
 
-                    // Actualizar barra visual
                     updateShotClockVisual(state.shotClockTime);
 
                 }, 1000);
             }
 
             function updateShotClockVisual(timeElapsed) {
-                // MODIFICACIÓN: Si pasamos de 40 (en cualquier modo), TODO ROJO
                 if (timeElapsed > 40) {
                     const bars = document.querySelectorAll('.clock-segment');
                     bars.forEach(bar => {
@@ -530,7 +524,6 @@
                     return; 
                 }
                 
-                // Lógica normal (0 a 40 segundos)
                 const barIndex = timeElapsed - 1;
                 const bar = document.getElementById(`seg-${barIndex}`);
                 
@@ -711,166 +704,9 @@
                 modalCancelBtn.textContent = 'Cancelar';
             }
 
-
-            // --- MANEJADORES DE EVENTOS ---
-
-            numPlayersSelect.addEventListener('change', (e) => {
-                if (e.target.value === '1') {
-                    player2SetupContainer.classList.add('hidden');
-                } else {
-                    player2SetupContainer.classList.remove('hidden');
-                }
-            });
-
-            startGameBtn.addEventListener('click', () => {
-                state.numPlayers = parseInt(numPlayersSelect.value);
-                player1NameInput.value = player1SetupName.value;
-                state.targetScore = parseInt(setupTargetScore.value) || 0;
-                state.targetInnings = parseInt(setupTargetInnings.value) || 0;
-                
-                // Leer configuración del timer
-                state.regulatoryTimer = (regulatoryTimerSelect.value === 'yes');
-
-                distanciaInput.value = state.targetScore > 0 ? state.targetScore : '';
-                
-                if (state.targetInnings > 0) {
-                    inningsLimitDisplay.textContent = `/ ${state.targetInnings}`;
-                    inningsLimitDisplay.classList.remove('hidden');
-                } else {
-                    inningsLimitDisplay.classList.add('hidden');
-                }
-
-                if (state.numPlayers === 2) {
-                    player2NameInput.value = player2SetupName.value;
-                }
-
-                setupModal.classList.add('hidden');
-                appContent.classList.remove('hidden');
-                
-                if (audioCtx.state === 'suspended') {
-                    audioCtx.resume();
-                }
-
-                initializeGame();
-                
-                // CAMBIOS SOLICITADOS:
-                // 1. Iniciar reloj de partida inmediatamente
-                state.startTime = Date.now();
-                startTimer(); 
-                
-                // 2. Iniciar timer de jugada inmediatamente
-                resetShotClock(); 
-            });
-
-            // BOTÓN "I" -> INICIA/REINICIA TIMER MANUALMENTE
-            initTimerBtn.addEventListener('click', () => {
-                resetShotClock();
-            });
-
-            // Handlers de puntos (NO REINICIAN EL SHOT CLOCK)
-            function handleAddPoint1() {
-                saveState();
-                state.score1++; 
-                state.inningScore1++; 
-                state.currentPlayer = 1;
-                if (state.innings === 0) state.innings = 1;
-                startTimer();
-                updateDisplay();
-            }
-            addPoint1Btn.addEventListener('click', handleAddPoint1);
-            score1Display.addEventListener('click', handleAddPoint1);
-
-            function handleAddPoint2() {
-                if (state.numPlayers === 1) return; 
-                saveState();
-                state.score2++; 
-                state.inningScore2++; 
-                state.currentPlayer = 2;
-                if (state.innings === 0) state.innings = 1;
-                startTimer();
-                updateDisplay();
-            }
-            addPoint2Btn.addEventListener('click', handleAddPoint2);
-            score2Display.addEventListener('click', handleAddPoint2);
-
-            undoPoint1Btn.addEventListener('click', () => {
-                if (state.score1 > 0 && state.inningScore1 > 0) {
-                    saveState();
-                    state.score1--;
-                    state.inningScore1--;
-                    updateDisplay();
-                }
-            });
-
-            undoPoint2Btn.addEventListener('click', () => {
-                if (state.numPlayers === 1) return;
-                if (state.score2 > 0 && state.inningScore2 > 0) {
-                    saveState();
-                    state.score2--;
-                    state.inningScore2--;
-                    updateDisplay();
-                }
-            });
-
-            // --- BOTÓN AZUL: CAMBIAR TURNO ---
-            // ESTE ES EL QUE RESETEA EL TIMER MANUALMENTE
-            nextInningBtn.addEventListener('click', () => {
-                saveState();
-                
-                state.inningScore1 = 0;
-                state.inningScore2 = 0;
-                
-                if (state.numPlayers === 1) {
-                    state.innings++;
-                } else {
-                    if (state.currentPlayer === 1) {
-                        state.currentPlayer = 2; 
-                    } else {
-                        state.currentPlayer = 1; 
-                        state.innings++; 
-                    }
-                }
-                if (state.innings === 0) state.innings = 1;
-                
-                startTimer();
-                resetShotClock(); 
-                updateDisplay();
-            });
-
-            undoBtn.addEventListener('click', () => {
-                if (history.length > 0) {
-                    const lastState = history.pop();
-                    if (!lastState.timerInterval) stopTimer();
-                    
-                    state.score1 = lastState.score1;
-                    state.score2 = lastState.score2;
-                    state.inningScore1 = lastState.inningScore1;
-                    state.inningScore2 = lastState.inningScore2;
-                    state.innings = lastState.innings;
-                    state.currentPlayer = lastState.currentPlayer;
-                    
-                    updateDisplay();
-                }
-            });
-
-            pauseTimerBtn.addEventListener('click', () => {
-                if (!state.startTime) return; 
-
-                if (state.isPaused) {
-                    state.isPaused = false;
-                    if (state.pauseStartTime) {
-                        state.pausedTime += (Date.now() - state.pauseStartTime);
-                    }
-                    state.pauseStartTime = null;
-                } else {
-                    state.isPaused = true;
-                    state.pauseStartTime = Date.now(); 
-                }
-                updateDisplay(); 
-            });
- 
-            finishGameBtn.addEventListener('click', () => {
-                if (!state.isPaused && state.startTime) {
+            // Función centralizada para terminar la partida
+            function executeFinishGame(finishReason = "") {
+                 if (!state.isPaused && state.startTime) {
                     state.isPaused = true;
                     state.pauseStartTime = Date.now();
                 }
@@ -898,30 +734,241 @@
                 const finalAvg1 = calculateAvg(state.score1, p1AvgInnings);
                 const finalAvg2 = calculateAvg(state.score2, p2AvgInnings);
 
+                let reasonHtml = finishReason ? `<div class="bg-blue-900/50 p-2 rounded mb-3 border border-blue-500 text-center font-bold text-blue-200">${finishReason}</div>` : '';
+
                 let resultsHtml = `
                     <h4 class="text-xl font-bold text-yellow-400 mb-4">Resultados de la Partida:</h4>
+                    ${reasonHtml}
                     <p><strong>Duración:</strong> ${durationFormatted}</p>
                     <p><strong>Entradas Totales:</strong> ${state.innings}</p>
                     <hr class="my-3 border-gray-600">
-                    <p><strong>${player1NameInput.value}:</strong></p>
-                    <ul>
-                        <li>Carambolas: ${state.score1}</li>
+                    <p class="text-lg text-yellow-300 mb-1"><strong>${player1NameInput.value}:</strong></p>
+                    <ul class="list-disc list-inside pl-2 space-y-1">
+                        <li>Carambolas: <strong>${state.score1}</strong></li>
                         <li>Promedio: ${finalAvg1}</li>
+                        <li>Serie Mayor: <strong>${state.highRun1}</strong></li>
+                        <li>Entradas en cero: <strong>${state.zeros1}</strong></li>
                     </ul>
                 `;
 
                 if (state.numPlayers === 2) {
                     resultsHtml += `
                         <hr class="my-3 border-gray-600">
-                        <p><strong>${player2NameInput.value}:</strong></p>
-                        <ul>
-                            <li>Carambolas: ${state.score2}</li>
+                        <p class="text-lg text-yellow-300 mb-1"><strong>${player2NameInput.value}:</strong></p>
+                        <ul class="list-disc list-inside pl-2 space-y-1">
+                            <li>Carambolas: <strong>${state.score2}</strong></li>
                             <li>Promedio: ${finalAvg2}</li>
+                            <li>Serie Mayor: <strong>${state.highRun2}</strong></li>
+                            <li>Entradas en cero: <strong>${state.zeros2}</strong></li>
                         </ul>
                     `;
                 }
                 
                 showConfirmation('Partida Terminada', '', null, true, resultsHtml);
+            }
+
+
+            // --- MANEJADORES DE EVENTOS ---
+
+            numPlayersSelect.addEventListener('change', (e) => {
+                if (e.target.value === '1') {
+                    player2SetupContainer.classList.add('hidden');
+                } else {
+                    player2SetupContainer.classList.remove('hidden');
+                }
+            });
+
+            startGameBtn.addEventListener('click', () => {
+                state.numPlayers = parseInt(numPlayersSelect.value);
+                player1NameInput.value = player1SetupName.value;
+                state.targetScore = parseInt(setupTargetScore.value) || 0;
+                state.targetInnings = parseInt(setupTargetInnings.value) || 0;
+                
+                state.regulatoryTimer = (regulatoryTimerSelect.value === 'yes');
+
+                distanciaInput.value = state.targetScore > 0 ? state.targetScore : '';
+                
+                if (state.targetInnings > 0) {
+                    inningsLimitDisplay.textContent = `/ ${state.targetInnings}`;
+                    inningsLimitDisplay.classList.remove('hidden');
+                } else {
+                    inningsLimitDisplay.classList.add('hidden');
+                }
+
+                if (state.numPlayers === 2) {
+                    player2NameInput.value = player2SetupName.value;
+                }
+
+                setupModal.classList.add('hidden');
+                appContent.classList.remove('hidden');
+                
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+
+                initializeGame();
+                
+                state.startTime = Date.now();
+                startTimer(); 
+                
+                resetShotClock(); 
+            });
+
+            initTimerBtn.addEventListener('click', () => {
+                resetShotClock();
+            });
+
+            // Handlers de puntos
+            function handleAddPoint1() {
+                saveState();
+                state.score1++; 
+                state.inningScore1++; 
+                state.currentPlayer = 1;
+                
+                // Actualizar Serie Mayor J1
+                if (state.inningScore1 > state.highRun1) {
+                    state.highRun1 = state.inningScore1;
+                }
+
+                if (state.innings === 0) state.innings = 1;
+                startTimer();
+                updateDisplay();
+
+                // AUTO-FINISH: Meta de Carambolas
+                if (state.targetScore > 0 && state.score1 >= state.targetScore) {
+                     // Pequeño delay para que se vea el punto antes del modal
+                     setTimeout(() => executeFinishGame("¡Meta de carambolas alcanzada!"), 100);
+                }
+            }
+            addPoint1Btn.addEventListener('click', handleAddPoint1);
+            score1Display.addEventListener('click', handleAddPoint1);
+
+            function handleAddPoint2() {
+                if (state.numPlayers === 1) return; 
+                saveState();
+                state.score2++; 
+                state.inningScore2++; 
+                state.currentPlayer = 2;
+
+                // Actualizar Serie Mayor J2
+                if (state.inningScore2 > state.highRun2) {
+                    state.highRun2 = state.inningScore2;
+                }
+
+                if (state.innings === 0) state.innings = 1;
+                startTimer();
+                updateDisplay();
+
+                // AUTO-FINISH: Meta de Carambolas
+                if (state.targetScore > 0 && state.score2 >= state.targetScore) {
+                     setTimeout(() => executeFinishGame("¡Meta de carambolas alcanzada!"), 100);
+                }
+            }
+            addPoint2Btn.addEventListener('click', handleAddPoint2);
+            score2Display.addEventListener('click', handleAddPoint2);
+
+            undoPoint1Btn.addEventListener('click', () => {
+                if (state.score1 > 0 && state.inningScore1 > 0) {
+                    saveState();
+                    state.score1--;
+                    state.inningScore1--;
+                    // Nota: No bajamos highRun aquí porque el estado anterior (historial) se encargará si hacemos undo completo,
+                    // y si solo bajamos punto actual, la serie mayor histórica se mantiene.
+                    updateDisplay();
+                }
+            });
+
+            undoPoint2Btn.addEventListener('click', () => {
+                if (state.numPlayers === 1) return;
+                if (state.score2 > 0 && state.inningScore2 > 0) {
+                    saveState();
+                    state.score2--;
+                    state.inningScore2--;
+                    updateDisplay();
+                }
+            });
+
+            // --- CAMBIO DE TURNO (LÓGICA DE ZEROS Y AUTO-FINISH ENTRADAS) ---
+            nextInningBtn.addEventListener('click', () => {
+                saveState();
+                
+                // Verificar ceros del jugador que TERMINA su turno
+                if (state.currentPlayer === 1) {
+                    if (state.inningScore1 === 0) state.zeros1++;
+                } else {
+                    if (state.inningScore2 === 0) state.zeros2++;
+                }
+
+                state.inningScore1 = 0;
+                state.inningScore2 = 0;
+                
+                if (state.numPlayers === 1) {
+                    state.innings++;
+                } else {
+                    if (state.currentPlayer === 1) {
+                        state.currentPlayer = 2; 
+                    } else {
+                        // J2 terminó su turno, se completa la entrada
+                        state.currentPlayer = 1; 
+                        state.innings++; 
+                    }
+                }
+                if (state.innings === 0) state.innings = 1;
+                
+                startTimer();
+                resetShotClock(); 
+                updateDisplay();
+
+                // AUTO-FINISH: Límite de Entradas
+                // Verificamos si se alcanzó el límite.
+                // En 2 jugadores, esto se comprueba típicamente al cerrar la entrada (fin del turno J2),
+                // que ocurre en el bloque 'else' superior (state.innings++).
+                if (state.targetInnings > 0 && state.innings >= state.targetInnings) {
+                    // Nota: Si innings >= target, es porque acabamos de incrementar la última.
+                    setTimeout(() => executeFinishGame("Límite de entradas alcanzado"), 100);
+                }
+            });
+
+            undoBtn.addEventListener('click', () => {
+                if (history.length > 0) {
+                    const lastState = history.pop();
+                    if (!lastState.timerInterval) stopTimer();
+                    
+                    state.score1 = lastState.score1;
+                    state.score2 = lastState.score2;
+                    state.inningScore1 = lastState.inningScore1;
+                    state.inningScore2 = lastState.inningScore2;
+                    state.innings = lastState.innings;
+                    state.currentPlayer = lastState.currentPlayer;
+                    
+                    // Restaurar estadísticas nuevas
+                    state.highRun1 = lastState.highRun1;
+                    state.highRun2 = lastState.highRun2;
+                    state.zeros1 = lastState.zeros1;
+                    state.zeros2 = lastState.zeros2;
+                    
+                    updateDisplay();
+                }
+            });
+
+            pauseTimerBtn.addEventListener('click', () => {
+                if (!state.startTime) return; 
+
+                if (state.isPaused) {
+                    state.isPaused = false;
+                    if (state.pauseStartTime) {
+                        state.pausedTime += (Date.now() - state.pauseStartTime);
+                    }
+                    state.pauseStartTime = null;
+                } else {
+                    state.isPaused = true;
+                    state.pauseStartTime = Date.now(); 
+                }
+                updateDisplay(); 
+            });
+ 
+            finishGameBtn.addEventListener('click', () => {
+                executeFinishGame();
             });
 
             resetBtn.addEventListener('click', () => {
@@ -959,17 +1006,20 @@
                     startTime: null,
                     timerInterval: null,
                     numPlayers: state.numPlayers,
-                    
-                    // Aseguramos que la configuración elegida en el modal se mantenga
                     regulatoryTimer: state.regulatoryTimer,
-
                     isPaused: false,
                     pausedTime: 0,
                     pauseStartTime: null,
                     targetScore: state.targetScore,
                     targetInnings: state.targetInnings,
                     shotClockTime: 0,
-                    shotClockInterval: null
+                    shotClockInterval: null,
+                    
+                    // Reset stats
+                    highRun1: 0,
+                    highRun2: 0,
+                    zeros1: 0,
+                    zeros2: 0
                 };
                 history = []; 
                 timerDisplay.textContent = '00:00:00';
