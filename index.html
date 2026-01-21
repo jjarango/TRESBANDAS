@@ -182,7 +182,7 @@
 
                 <div class="text-center">
                     <div class="text-4xl sm:text-5xl font-black text-white flex items-baseline justify-center">
-                        <span id="innings-display">0</span>
+                        <span id="innings-display">1</span>
                         <span id="innings-limit-display" class="text-2xl text-gray-500 ml-1 hidden">/ 50</span>
                     </div>
                     <div class="text-sm sm:text-lg font-bold text-gray-400 tracking-wider">ENTRADAS</div>
@@ -199,7 +199,7 @@
                 </div>
                 
                 <div class="w-full md:w-1/5 text-center font-black text-white order-first md:order-none mb-2 md:mb-0">
-                    Entrada: <span id="summary-innings">0</span>
+                    Entrada: <span id="summary-innings">1</span>
                 </div>
 
                 <div id="summary-player2" class="w-full md:w-2/5 text-center md:text-right">
@@ -332,7 +332,7 @@
                 score2: 0, 
                 inningScore1: 0, 
                 inningScore2: 0, 
-                innings: 0,
+                innings: 0, // Cuenta las veces que J2 completó turno
                 currentPlayer: 1, 
                 startTime: null,
                 timerInterval: null, 
@@ -577,9 +577,8 @@
                 if (history.length > 50) history.shift(); 
             }
 
-            // CORRECCIÓN PRINCIPAL AQUÍ: CÁLCULO DE PROMEDIO
             function calculateAvg(score, innings) {
-                if (innings === 0) return '0.000';
+                if (innings <= 0) return '0.000';
                 return (score / innings).toFixed(3);
             }
 
@@ -614,28 +613,54 @@
                 
                 updateTotalScoreColors();
 
-                inningsDisplay.textContent = state.innings;
+                // MOSTRAR LA ENTRADA ACTUAL (state.innings es las completadas)
+                let currentInningDisplay = state.innings + 1;
+                inningsDisplay.textContent = currentInningDisplay;
+                summaryInnings.textContent = currentInningDisplay;
 
-                // CORRECCIÓN DE LÓGICA DE ENTRADAS PARA PROMEDIO
-                // El promedio siempre se calcula sobre la entrada ACTUAL del jugador, o la completada si no es su turno.
+                // CÁLCULO DE PROMEDIO CORREGIDO
+                // El promedio visual siempre debe coincidir con el número que ve el usuario en "Entrada".
                 
-                let p1Divisor = state.innings;
-                if (p1Divisor === 0) p1Divisor = 1; // Evitar división por cero inicial
+                // J1 siempre juega la entrada "currentInningDisplay"
+                let p1Divisor = currentInningDisplay;
 
-                let p2Divisor = state.innings;
-                // Si es el turno del J1 y estamos en 2 jugadores, J2 tiene una entrada menos jugada
-                if (state.currentPlayer === 1 && state.numPlayers === 2) {
-                     p2Divisor = state.innings > 1 ? state.innings - 1 : 1; 
-                     // Si estamos en la entrada 1, J2 tiene 0 jugadas, pero para evitar NaN usamos 1 (su score será 0 de todas formas)
-                     if (state.innings === 1) p2Divisor = 1; 
+                let p2Divisor;
+                if (state.numPlayers === 1) {
+                    p2Divisor = 1; 
+                } else {
+                    // En 2 jugadores:
+                    // Si es turno de J2, J2 está jugando la entrada actual (Mismo número que ve en pantalla)
+                    // Si es turno de J1, J2 completó la entrada anterior.
+                    if (state.currentPlayer === 2) {
+                        p2Divisor = currentInningDisplay;
+                    } else {
+                        // J2 aún no juega la entrada actual, su promedio se basa en las completadas
+                        p2Divisor = state.innings;
+                    }
                 }
                 
+                if (p2Divisor === 0) p2Divisor = 1; // Evitar división por cero inicial para J2
+
                 avg1Display.textContent = calculateAvg(state.score1, p1Divisor);
                 
                 if (state.numPlayers === 2) {
                     avg2Display.textContent = calculateAvg(state.score2, p2Divisor);
                 }
                 
+                // --- Actualización de Resumen ---
+                summaryScore1.textContent = state.score1;
+                summaryAvg1.textContent = calculateAvg(state.score1, p1Divisor);
+                
+                if (state.numPlayers === 2) { 
+                    summaryPlayer2.classList.remove('hidden'); 
+                    summaryName2.textContent = player2NameInput.value; 
+                    summaryScore2.textContent = state.score2;
+                    summaryAvg2.textContent = calculateAvg(state.score2, p2Divisor);
+                } else {
+                    summaryPlayer2.classList.add('hidden'); 
+                }
+
+                // --- Gestión de Paneles Activos ---
                 panel1.classList.remove('player-active', 'border-yellow-400', 'player-active-bg');
                 panel2.classList.remove('player-active', 'border-yellow-400', 'player-active-bg');
                 panel1.classList.add('bg-gray-700/50');
@@ -650,18 +675,6 @@
                 }
  
                 summaryName1.textContent = player1NameInput.value;
-                summaryScore1.textContent = state.score1;
-                summaryAvg1.textContent = calculateAvg(state.score1, p1Divisor);
-                
-                if (state.numPlayers === 2) { 
-                    summaryPlayer2.classList.remove('hidden'); 
-                    summaryName2.textContent = player2NameInput.value; 
-                    summaryScore2.textContent = state.score2;
-                    summaryAvg2.textContent = calculateAvg(state.score2, p2Divisor);
-                } else {
-                    summaryPlayer2.classList.add('hidden'); 
-                }
-                summaryInnings.textContent = state.innings;
 
                 if (state.numPlayers === 1) {
                     panel2.classList.add('hidden');
@@ -733,16 +746,28 @@
                 
                 const durationFormatted = formatTime(durationSeconds);
                 
-                // LÓGICA DE DIVISORES FINAL
-                let p1Divisor = state.innings;
-                if (p1Divisor === 0) p1Divisor = 1;
+                // CÁLCULO FINAL DE PROMEDIOS PARA EL REPORTE
+                // Usamos la misma lógica que el display:
+                // Si terminamos porque J2 completó las entradas, ambos jugaron "state.innings" (50)
+                // Si terminamos por carambolas en medio de una entrada, usamos el contador actual.
+                
+                let p1Divisor, p2Divisor;
 
-                let p2Divisor = state.innings;
-                // Si terminó en turno del J1 (raro en fin de partida completa, pero posible por retiro), J2 tiene una menos
-                // Si terminó en turno J2, ambos tienen mismas entradas.
-                if (state.currentPlayer === 1 && state.numPlayers === 2) {
-                     p2Divisor = state.innings > 1 ? state.innings - 1 : 1;
+                if (state.targetInnings > 0 && state.innings >= state.targetInnings) {
+                    // Límite de entradas alcanzado (J2 cerró)
+                    p1Divisor = state.innings;
+                    p2Divisor = state.innings;
+                } else {
+                    // Fin por carambolas o botón Terminar
+                    p1Divisor = state.innings + (state.currentPlayer === 1 ? 1 : 0);
+                    if(state.currentPlayer === 2) p1Divisor = state.innings + 1; // Si es turno J2, J1 ya jugó esa entrada
+
+                    p2Divisor = state.innings + (state.currentPlayer === 2 ? 1 : 0);
                 }
+                
+                // Corrección mínima por si acaso
+                if (p1Divisor === 0) p1Divisor = 1;
+                if (p2Divisor === 0) p2Divisor = 1;
 
                 const finalAvg1 = calculateAvg(state.score1, p1Divisor);
                 const finalAvg2 = calculateAvg(state.score2, p2Divisor);
@@ -753,7 +778,7 @@
                     <h4 class="text-xl font-bold text-yellow-400 mb-4">Resultados de la Partida:</h4>
                     ${reasonHtml}
                     <p><strong>Duración:</strong> ${durationFormatted}</p>
-                    <p><strong>Entradas Totales:</strong> ${state.innings}</p>
+                    <p><strong>Entradas Totales:</strong> ${Math.max(p1Divisor, p2Divisor)}</p>
                     <hr class="my-3 border-gray-600">
                     <p class="text-lg text-yellow-300 mb-1"><strong>${player1NameInput.value}:</strong></p>
                     <ul class="list-disc list-inside pl-2 space-y-1">
@@ -843,7 +868,7 @@
                     state.highRun1 = state.inningScore1;
                 }
 
-                if (state.innings === 0) state.innings = 1;
+                // CORRECCIÓN: Eliminado el incremento de entradas aquí
                 startTimer();
                 updateDisplay();
 
@@ -868,7 +893,7 @@
                     state.highRun2 = state.inningScore2;
                 }
 
-                if (state.innings === 0) state.innings = 1;
+                // CORRECCIÓN: Eliminado el incremento de entradas aquí
                 startTimer();
                 updateDisplay();
 
@@ -926,7 +951,7 @@
                         state.innings++; 
                     }
                 }
-                if (state.innings === 0) state.innings = 1;
+                // CORRECCIÓN: Eliminada la línea que forzaba state.innings = 1 si era 0
                 
                 startTimer();
                 resetShotClock(); 
@@ -934,10 +959,7 @@
 
                 // AUTO-FINISH: Límite de Entradas
                 // Verificamos si se alcanzó el límite.
-                // En 2 jugadores, esto se comprueba típicamente al cerrar la entrada (fin del turno J2),
-                // que ocurre en el bloque 'else' superior (state.innings++).
                 if (state.targetInnings > 0 && state.innings >= state.targetInnings) {
-                    // Nota: Si innings >= target, es porque acabamos de incrementar la última.
                     setTimeout(() => executeFinishGame("Límite de entradas alcanzado"), 100);
                 }
             });
