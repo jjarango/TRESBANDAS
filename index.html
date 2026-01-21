@@ -577,8 +577,9 @@
                 if (history.length > 50) history.shift(); 
             }
 
+            // CORRECCIÓN PRINCIPAL AQUÍ: CÁLCULO DE PROMEDIO
             function calculateAvg(score, innings) {
-                if (innings === 0 || score === 0) return '0.000';
+                if (innings === 0) return '0.000';
                 return (score / innings).toFixed(3);
             }
 
@@ -615,17 +616,24 @@
 
                 inningsDisplay.textContent = state.innings;
 
-                let p1AvgInnings = state.innings > 0 ? (state.currentPlayer === 1 ? state.innings - 1 : state.innings) : 0;
-                let p2AvgInnings = state.innings > 0 ? state.innings - 1 : 0;
+                // CORRECCIÓN DE LÓGICA DE ENTRADAS PARA PROMEDIO
+                // El promedio siempre se calcula sobre la entrada ACTUAL del jugador, o la completada si no es su turno.
                 
-                if (state.innings === 0) {
-                     avg1Display.textContent = '0.000';
-                     avg2Display.textContent = '0.000';
-                } else {
-                    avg1Display.textContent = calculateAvg(state.score1, p1AvgInnings > 0 ? p1AvgInnings : 1);
-                    if (state.numPlayers === 2) {
-                        avg2Display.textContent = calculateAvg(state.score2, p2AvgInnings > 0 ? p2AvgInnings : 1);
-                    }
+                let p1Divisor = state.innings;
+                if (p1Divisor === 0) p1Divisor = 1; // Evitar división por cero inicial
+
+                let p2Divisor = state.innings;
+                // Si es el turno del J1 y estamos en 2 jugadores, J2 tiene una entrada menos jugada
+                if (state.currentPlayer === 1 && state.numPlayers === 2) {
+                     p2Divisor = state.innings > 1 ? state.innings - 1 : 1; 
+                     // Si estamos en la entrada 1, J2 tiene 0 jugadas, pero para evitar NaN usamos 1 (su score será 0 de todas formas)
+                     if (state.innings === 1) p2Divisor = 1; 
+                }
+                
+                avg1Display.textContent = calculateAvg(state.score1, p1Divisor);
+                
+                if (state.numPlayers === 2) {
+                    avg2Display.textContent = calculateAvg(state.score2, p2Divisor);
                 }
                 
                 panel1.classList.remove('player-active', 'border-yellow-400', 'player-active-bg');
@@ -643,13 +651,13 @@
  
                 summaryName1.textContent = player1NameInput.value;
                 summaryScore1.textContent = state.score1;
-                summaryAvg1.textContent = calculateAvg(state.score1, p1AvgInnings > 0 ? p1AvgInnings : 1);
+                summaryAvg1.textContent = calculateAvg(state.score1, p1Divisor);
                 
                 if (state.numPlayers === 2) { 
                     summaryPlayer2.classList.remove('hidden'); 
                     summaryName2.textContent = player2NameInput.value; 
                     summaryScore2.textContent = state.score2;
-                    summaryAvg2.textContent = calculateAvg(state.score2, p2AvgInnings > 0 ? p2AvgInnings : 1);
+                    summaryAvg2.textContent = calculateAvg(state.score2, p2Divisor);
                 } else {
                     summaryPlayer2.classList.add('hidden'); 
                 }
@@ -725,14 +733,19 @@
                 
                 const durationFormatted = formatTime(durationSeconds);
                 
-                let p1AvgInnings = state.innings > 0 ? (state.currentPlayer === 1 ? state.innings - 1 : state.innings) : 1;
-                if (p1AvgInnings < 1) p1AvgInnings = 1;
-                
-                let p2AvgInnings = state.innings > 0 ? state.innings - 1 : 1;
-                if (p2AvgInnings < 1) p2AvgInnings = 1;
+                // LÓGICA DE DIVISORES FINAL
+                let p1Divisor = state.innings;
+                if (p1Divisor === 0) p1Divisor = 1;
 
-                const finalAvg1 = calculateAvg(state.score1, p1AvgInnings);
-                const finalAvg2 = calculateAvg(state.score2, p2AvgInnings);
+                let p2Divisor = state.innings;
+                // Si terminó en turno del J1 (raro en fin de partida completa, pero posible por retiro), J2 tiene una menos
+                // Si terminó en turno J2, ambos tienen mismas entradas.
+                if (state.currentPlayer === 1 && state.numPlayers === 2) {
+                     p2Divisor = state.innings > 1 ? state.innings - 1 : 1;
+                }
+
+                const finalAvg1 = calculateAvg(state.score1, p1Divisor);
+                const finalAvg2 = calculateAvg(state.score2, p2Divisor);
 
                 let reasonHtml = finishReason ? `<div class="bg-blue-900/50 p-2 rounded mb-3 border border-blue-500 text-center font-bold text-blue-200">${finishReason}</div>` : '';
 
