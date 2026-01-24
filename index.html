@@ -6,7 +6,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
-    <title>Marcador de Billar (Flex Layout)</title>
+    <title>Marcador de Billar 3 Bandas</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -26,22 +26,36 @@
             -webkit-user-select: text;
             user-select: text;
         }
-        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-inner-spin-button,
         input[type=number]::-webkit-outer-spin-button {
             -webkit-appearance: none;
             margin: 0;
         }
-        input[type=number] { -moz-appearance: textfield; }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
 
         /* Paneles */
-        .player-active { box-shadow: inset 0 0 0 6px #FACC15; }
-        .player-active-bg { background-color: #7f1d1d; }
-        .player-inactive-bg { background-color: #111827; }
+        .player-active {
+            box-shadow: inset 0 0 0 4px #FACC15;
+        }
+        .player-active-bg {
+            background-color: #7f1d1d;
+        }
+        .player-inactive-bg {
+            background-color: #1f2937; /* Gris oscuro */
+        }
 
-        /* Textos */
-        .text-score { font-size: 8rem; line-height: 1; }
-        @media (max-width: 1024px) { .text-score { font-size: 7rem; } } 
-        @media (max-width: 768px) { .text-score { font-size: 6rem; } }
+        /* Texto Score Central */
+        .text-score {
+            font-size: 7rem;
+            line-height: 1;
+        }
+        @media (max-width: 768px) {
+            .text-score {
+                font-size: 5rem;
+            }
+        }
 
         /* Reloj */
         .shot-clock-bar-container { display: flex; height: 100%; width: 100%; gap: 2px; }
@@ -50,198 +64,172 @@
         .segment-orange { background-color: #f97316; box-shadow: 0 0 4px #f97316; }
         .segment-red { background-color: #ef4444; box-shadow: 0 0 8px #ef4444; }
         
+        /* Banderas */
         .flag-icon {
             display: block;
-            border-radius: 4px;
+            border-radius: 2px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.5);
         }
-
-        /* Input Nombre: Empieza grande, JS reduce */
-        .player-name-input {
-            background: transparent;
-            color: white;
-            font-weight: 900;
-            border: none;
-            outline: none;
-            width: 100%;
-            padding: 0;
-            margin: 0;
-            line-height: 1.1;
-            white-space: nowrap;
-            overflow: hidden; 
-            text-overflow: clip; /* No usar ellipsis para que el JS calcule bien el ancho total */
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-        }
-        .player-name-input:focus { border-bottom: 2px solid #FACC15; }
     </style>
 </head>
-<body class="bg-black text-white min-h-screen flex flex-col items-center p-2 fixed w-full h-full inset-0"> 
+<body class="bg-gray-900 text-white min-h-screen flex flex-col items-center p-2 fixed w-full h-full inset-0"> 
 
-<div id="setup-modal" class="fixed inset-0 bg-black/90 flex items-center justify-center z-50 overflow-y-auto">
-        <div class="bg-gray-900 border border-gray-700 p-8 rounded-2xl shadow-2xl max-w-md w-full">
-            <h3 class="text-3xl font-black mb-6 text-yellow-400 text-center uppercase tracking-wider">Configuración</h3>
+    <div id="setup-modal" class="fixed inset-0 bg-black/90 flex items-center justify-center z-50 overflow-y-auto">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-xl max-w-md w-full border border-gray-600">
+            <h3 class="text-2xl font-bold mb-4 text-yellow-400 text-center">Configuración</h3>
             
-            <div class="mb-5">
-                <label class="block text-gray-400 text-xs uppercase tracking-widest font-bold mb-2">Modo de Juego</label>
-                <select id="num-players" class="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-600 focus:border-yellow-400 focus:outline-none text-lg">
-                    <option value="1">1 Jugador (Práctica)</option>
-                    <option value="2" selected>2 Jugadores (Partida)</option>
-                </select>
-            </div>
-
-            <div class="mb-5">
-                <label class="block text-gray-400 text-xs uppercase tracking-widest font-bold mb-2">Reloj de Tiro</label>
-                <select id="regulatory-timer" class="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-600 focus:border-yellow-400 focus:outline-none text-lg">
-                    <option value="yes" selected>Reglamentario (40s)</option>
-                    <option value="no">Libre (Sin límite)</option>
+            <div class="mb-4">
+                <label class="block text-gray-300 text-sm font-bold mb-1">Modo:</label>
+                <select id="num-players" class="w-full p-2 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-yellow-400">
+                    <option value="1">1 Jugador</option>
+                    <option value="2" selected>2 Jugadores</option>
                 </select>
             </div>
 
             <div class="mb-4">
-                <label class="block text-gray-400 text-xs uppercase tracking-widest font-bold mb-1">Jugador 1</label>
+                <label class="block text-gray-300 text-sm font-bold mb-1">Timer:</label>
+                <select id="regulatory-timer" class="w-full p-2 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-yellow-400">
+                    <option value="yes" selected>Reglamentario (40s)</option>
+                    <option value="no">Libre</option>
+                </select>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-gray-300 text-sm font-bold mb-1">Jugador 1:</label>
                 <div class="flex gap-2">
-                    <input type="text" id="player1-setup-name" value="Jugador 1" class="flex-1 p-3 bg-gray-800 text-white rounded-lg border border-gray-600 focus:border-yellow-400 outline-none">
-                    <select id="player1-country" class="w-32 p-2 bg-gray-800 text-white rounded-lg border border-gray-600 text-sm text-center"></select>
+                    <input type="text" id="player1-setup-name" maxlength="12" value="Jugador 1" class="flex-1 p-2 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-yellow-400">
+                    <select id="player1-country" class="w-32 p-2 bg-gray-700 text-white rounded text-sm"></select>
                 </div>
             </div>
 
-            <div id="player2-setup-container" class="mb-6">
-                <label class="block text-gray-400 text-xs uppercase tracking-widest font-bold mb-1">Jugador 2</label>
+            <div id="player2-setup-container" class="mb-4">
+                <label class="block text-gray-300 text-sm font-bold mb-1">Jugador 2:</label>
                 <div class="flex gap-2">
-                    <input type="text" id="player2-setup-name" value="Jugador 2" class="flex-1 p-3 bg-gray-800 text-white rounded-lg border border-gray-600 focus:border-yellow-400 outline-none">
-                    <select id="player2-country" class="w-32 p-2 bg-gray-800 text-white rounded-lg border border-gray-600 text-sm text-center"></select>
+                    <input type="text" id="player2-setup-name" maxlength="12" value="Jugador 2" class="flex-1 p-2 bg-gray-700 text-white rounded focus:outline-none focus:ring-2 focus:ring-yellow-400">
+                    <select id="player2-country" class="w-32 p-2 bg-gray-700 text-white rounded text-sm"></select>
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-4 mb-8">
+            <div class="grid grid-cols-2 gap-4 mb-6">
                 <div>
-                    <label class="block text-yellow-500 text-xs uppercase tracking-widest font-bold mb-1 text-center">Meta Carambolas</label>
-                    <input type="number" id="setup-target-score" value="40" class="w-full p-3 bg-gray-800 text-white text-center font-black text-2xl rounded-lg border border-gray-600 focus:border-yellow-400 outline-none">
+                    <label class="block text-yellow-500 text-sm font-bold mb-1">Carambolas:</label>
+                    <input type="number" id="setup-target-score" value="40" class="w-full p-2 bg-gray-700 text-white text-center font-bold text-lg rounded focus:outline-none focus:ring-2 focus:ring-yellow-400">
                 </div>
                 <div>
-                    <label class="block text-blue-400 text-xs uppercase tracking-widest font-bold mb-1 text-center">Límite Entradas</label>
-                    <input type="number" id="setup-target-innings" value="50" class="w-full p-3 bg-gray-800 text-white text-center font-black text-2xl rounded-lg border border-gray-600 focus:border-blue-400 outline-none">
+                    <label class="block text-blue-400 text-sm font-bold mb-1">Entradas:</label>
+                    <input type="number" id="setup-target-innings" value="50" class="w-full p-2 bg-gray-700 text-white text-center font-bold text-lg rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
                 </div>
             </div>
 
-            <button id="start-game-btn" class="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-500 hover:to-green-600 text-white font-black py-4 px-6 rounded-xl text-xl shadow-lg transform transition active:scale-95 uppercase tracking-wide">
-                Iniciar Partida
+            <button id="start-game-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded text-lg shadow-lg transition">
+                JUGAR
             </button>
         </div>
     </div>
 
-    <div id="app-content" class="w-full h-full flex flex-col hidden bg-gray-900">
+    <div id="app-content" class="w-full h-full flex flex-col hidden">
         
-        <header class="bg-black/60 p-2 shrink-0 border-b border-gray-800">
-            <div class="flex items-center justify-between gap-4 mb-2 px-2">
-                <div id="shot-clock-wrapper" class="flex-1 flex items-center gap-3 bg-black border border-gray-700 rounded-lg px-3 py-2 max-w-4xl mx-auto shadow-lg">
-                    <button id="init-timer-btn" style="background-color: #183b06;" class="w-10 h-10 flex items-center justify-center bg-gray-800 text-green-500 rounded font-bold hover:bg-gray-700 border border-gray-600 text-lg">I</button>
-                    <div id="shot-clock-number" class="text-5xl font-mono font-bold text-white w-20 text-center leading-none">40</div>
+        <header class="bg-black/30 p-2 shrink-0 border-b border-gray-700">
+            <div class="flex items-center justify-between gap-3 mb-1 px-1">
+                <div id="shot-clock-wrapper" class="flex-1 flex items-center gap-2 bg-black border border-gray-600 rounded px-2 py-1 max-w-3xl mx-auto">
+                    <button id="init-timer-btn" class="w-8 h-8 flex items-center justify-center bg-gray-800 text-green-500 rounded font-bold border border-gray-600">I</button>
+                    <div id="shot-clock-number" class="text-4xl font-mono font-bold text-white w-16 text-center leading-none">40</div>
                     <div id="shot-clock-bars" class="shot-clock-bar-container flex-1"></div>
                 </div>
-                <div class="hidden sm:block text-right">
-                    <div id="timer-display" class="text-2xl font-mono text-gray-400">00:00:00</div>
+                
+                <div class="hidden sm:block text-right w-24">
+                    <div id="timer-display" class="text-xl font-mono text-gray-300">00:00:00</div>
                 </div>
             </div>
-            <div class="flex justify-between items-end px-6 text-gray-500 text-xs font-black uppercase tracking-widest">
-                <div>Meta: <span id="distancia-display" class="text-yellow-500 text-lg">40</span></div>
-                <div class="sm:hidden text-center"><span id="timer-display-mobile" class="font-mono text-white text-lg">00:00:00</span></div>
-                <div>Límite: <span id="limit-display" class="text-blue-500 text-lg">50</span></div>
+
+            <div class="flex justify-between items-end px-4 text-gray-400 text-xs font-bold uppercase">
+                <div>Meta: <span id="distancia-display" class="text-yellow-400 text-base">40</span></div>
+                <div class="sm:hidden"><span id="timer-display-mobile" class="font-mono text-white">00:00:00</span></div>
+                <div>Límite: <span id="limit-display" class="text-blue-400 text-base">50</span></div>
             </div>
         </header>
 
-        <div class="bg-gray-800 border-b border-gray-700 p-3 shrink-0 flex items-center justify-center shadow-md z-20">
-            <div class="flex items-baseline gap-4">
-                <span class="text-gray-400 text-xl sm:text-2xl font-black uppercase tracking-widest">ENTRADA:</span>
-                <span id="innings-display" class="text-5xl sm:text-6xl font-black text-white leading-none">1</span>
+        <div class="bg-gray-800 border-b border-gray-700 p-2 shrink-0 flex items-center justify-center shadow-md z-20">
+            <div class="text-center">
+                <span class="text-gray-400 text-sm font-bold uppercase tracking-widest mr-2">ENTRADA:</span>
+                <span id="innings-display" class="text-5xl font-black text-white leading-none align-middle">1</span>
             </div>
         </div>
 
         <main class="flex flex-1 overflow-hidden relative">
             
-            <div id="player1-panel" class="relative w-1/2 flex flex-col border-r-2 border-black transition-colors duration-300 player-inactive-bg">
+            <div id="player1-panel" class="relative w-1/2 flex flex-col border-r border-gray-700 transition-colors duration-200 player-inactive-bg">
                 
-                <div class="flex justify-between items-start p-4 sm:p-6 w-full z-10 shrink-0">
-                    
-                    <div class="flex-1 min-w-0 pr-4 flex flex-col items-start">
-                        <div class="w-full">
-                            <input type="text" id="player1-name" value="Jugador 1" class="player-name-input text-left drop-shadow-md" spellcheck="false" style="font-size: 3.5rem;">
-                        </div>
-                        <img id="player1-flag-display" src="" class="flag-icon h-8 sm:h-10 w-auto border border-white/30 mt-2" alt="Flag">
-                    </div>
+                <div class="absolute top-3 left-3 z-10 flex flex-col items-start max-w-[65%]">
+                    <input type="text" id="player1-name" value="Jugador 1" readonly class="bg-transparent text-white font-bold text-2xl sm:text-3xl text-left w-full outline-none p-0 m-0 truncate">
+                    <img id="player1-flag-display" src="" class="flag-icon h-6 w-auto mt-1 border border-white/20" alt="Flag">
+                </div>
 
-                    <div class="shrink-0 bg-black/80 border-2 border-gray-500 rounded-2xl p-2 text-center min-w-[140px] shadow-2xl backdrop-blur-sm">
-                        <span class="block text-[10px] uppercase text-gray-400 font-bold tracking-widest mb-1">Total</span>
-                        <span id="total-score-box-1" class="text-7xl sm:text-8xl lg:text-9xl font-black text-white leading-none block pb-2">0</span>
+                <div class="absolute top-3 right-3 z-10 bg-black/80 border border-gray-500 rounded-lg p-1 text-center w-24 shadow-lg">
+                    <span class="block text-[10px] text-gray-400 font-bold uppercase">Total</span>
+                    <span id="total-score-box-1" class="text-6xl font-black text-white leading-none">0</span>
+                </div>
+
+                <div class="flex-1 flex flex-col items-center justify-center cursor-pointer select-none touch-manipulation hover:bg-white/5 pt-16" id="touch-area-1">
+                    <div id="score1-display" class="text-score font-black text-yellow-400 leading-none drop-shadow-lg">0</div>
+                    <div class="mt-2 text-gray-400 font-bold text-2xl">
+                        <span id="avg1-display">0.000</span>
                     </div>
                 </div>
 
-                <div class="flex-1 flex flex-col items-center justify-center cursor-pointer select-none touch-manipulation hover:bg-white/5 transition-colors -mt-10" id="touch-area-1">
-                    <div id="score1-display" class="text-score font-black text-yellow-400 leading-none drop-shadow-2xl filter brightness-110">0</div>
-                    <div class="mt-4 text-gray-300 font-bold text-3xl sm:text-4xl tracking-widest opacity-70">
-                        Avg: <span id="avg1-display">0.000</span>
-                    </div>
-                </div>
-
-                <div class="p-4 flex gap-4 mt-auto bg-black/40 backdrop-blur-md border-t border-white/10 shrink-0">
-                    <button id="add-point-1" class="flex-1 bg-gradient-to-b from-green-500 to-green-700 hover:from-green-400 hover:to-green-600 text-white font-black h-32 rounded-2xl text-4xl shadow-xl active:scale-95 transition-transform flex items-center justify-center border-t border-green-400">+1</button>
-                    <button id="undo-point-1" class="w-32 bg-gradient-to-b from-gray-600 to-gray-800 hover:from-gray-500 hover:to-gray-700 text-white font-black rounded-2xl text-5xl shadow-xl active:scale-95 transition-transform h-32 flex items-center justify-center border-t border-gray-500">↩</button>
+                <div class="p-2 flex gap-2 mt-auto bg-black/20 border-t border-white/5">
+                    <button id="add-point-1" class="flex-1 bg-green-700 hover:bg-green-600 text-white font-bold py-4 rounded text-2xl shadow active:scale-95 transition">+1</button>
+                    <button id="undo-point-1" class="w-20 bg-gray-600 hover:bg-gray-500 text-white font-bold rounded text-2xl shadow active:scale-95 transition">↩</button>
                 </div>
             </div>
             
-            <div id="player2-panel" class="relative w-1/2 flex flex-col transition-colors duration-300 player-inactive-bg">
+            <div id="player2-panel" class="relative w-1/2 flex flex-col transition-colors duration-200 player-inactive-bg">
                 
-                <div class="flex justify-between items-start p-4 sm:p-6 w-full z-10 shrink-0">
-                    
-                    <div class="flex-1 min-w-0 pr-4 flex flex-col items-start">
-                        <div class="w-full">
-                            <input type="text" id="player2-name" value="Jugador 2" class="player-name-input text-left drop-shadow-md" spellcheck="false" style="font-size: 3.5rem;">
-                        </div>
-                        <img id="player2-flag-display" src="" class="flag-icon h-8 sm:h-10 w-auto border border-white/30 mt-2" alt="Flag">
-                    </div>
+                <div class="absolute top-3 left-3 z-10 flex flex-col items-start max-w-[65%]">
+                    <input type="text" id="player2-name" value="Jugador 2" readonly class="bg-transparent text-white font-bold text-2xl sm:text-3xl text-left w-full outline-none p-0 m-0 truncate">
+                    <img id="player2-flag-display" src="" class="flag-icon h-6 w-auto mt-1 border border-white/20" alt="Flag">
+                </div>
 
-                    <div class="shrink-0 bg-black/80 border-2 border-gray-500 rounded-2xl p-2 text-center min-w-[140px] shadow-2xl backdrop-blur-sm">
-                        <span class="block text-[10px] uppercase text-gray-400 font-bold tracking-widest mb-1">Total</span>
-                        <span id="total-score-box-2" class="text-7xl sm:text-8xl lg:text-9xl font-black text-white leading-none block pb-2">0</span>
+                <div class="absolute top-3 right-3 z-10 bg-black/80 border border-gray-500 rounded-lg p-1 text-center w-24 shadow-lg">
+                    <span class="block text-[10px] text-gray-400 font-bold uppercase">Total</span>
+                    <span id="total-score-box-2" class="text-6xl font-black text-white leading-none">0</span>
+                </div>
+
+                <div class="flex-1 flex flex-col items-center justify-center cursor-pointer select-none touch-manipulation hover:bg-white/5 pt-16" id="touch-area-2">
+                    <div id="score2-display" class="text-score font-black text-yellow-400 leading-none drop-shadow-lg">0</div>
+                    <div class="mt-2 text-gray-400 font-bold text-2xl">
+                        <span id="avg2-display">0.000</span>
                     </div>
                 </div>
 
-                <div class="flex-1 flex flex-col items-center justify-center cursor-pointer select-none touch-manipulation hover:bg-white/5 transition-colors -mt-10" id="touch-area-2">
-                    <div id="score2-display" class="text-score font-black text-yellow-400 leading-none drop-shadow-2xl filter brightness-110">0</div>
-                    <div class="mt-4 text-gray-300 font-bold text-3xl sm:text-4xl tracking-widest opacity-70">
-                        Avg: <span id="avg2-display">0.000</span>
-                    </div>
-                </div>
-
-                <div class="p-4 flex gap-4 mt-auto bg-black/40 backdrop-blur-md border-t border-white/10 shrink-0">
-                    <button id="add-point-2" class="flex-1 bg-gradient-to-b from-green-500 to-green-700 hover:from-green-400 hover:to-green-600 text-white font-black h-32 rounded-2xl text-4xl shadow-xl active:scale-95 transition-transform flex items-center justify-center border-t border-green-400">+1</button>
-                    <button id="undo-point-2" class="w-32 bg-gradient-to-b from-gray-600 to-gray-800 hover:from-gray-500 hover:to-gray-700 text-white font-black rounded-2xl text-5xl shadow-xl active:scale-95 transition-transform h-32 flex items-center justify-center border-t border-gray-500">↩</button>
+                <div class="p-2 flex gap-2 mt-auto bg-black/20 border-t border-white/5">
+                    <button id="add-point-2" class="flex-1 bg-green-700 hover:bg-green-600 text-white font-bold py-4 rounded text-2xl shadow active:scale-95 transition">+1</button>
+                    <button id="undo-point-2" class="w-20 bg-gray-600 hover:bg-gray-500 text-white font-bold rounded text-2xl shadow active:scale-95 transition">↩</button>
                 </div>
             </div>
 
         </main>
 
-        <footer class="bg-gray-950 p-4 shrink-0 border-t border-gray-800 flex gap-3 overflow-x-auto shadow-2xl z-30">
-            <button id="next-inning-btn" class="flex-1 bg-gradient-to-b from-blue-600 to-blue-800 hover:from-blue-500 hover:to-blue-700 text-white font-black h-32 px-4 rounded-2xl text-2xl sm:text-3xl shadow-xl active:scale-95 transition whitespace-nowrap min-w-[200px] flex items-center justify-center uppercase tracking-wide border-t border-blue-400">
-                CAMBIO TURNO
+        <footer class="bg-gray-900 p-2 shrink-0 border-t border-gray-700 flex gap-2 overflow-x-auto">
+            <button id="next-inning-btn" class="flex-1 bg-blue-700 hover:bg-blue-600 text-white font-bold py-3 px-2 rounded-lg text-lg leading-tight shadow active:scale-95 transition min-w-[100px] whitespace-normal">
+                CAMBIO TURNO / FALLO
             </button>
-            <div class="flex gap-3">
-                <button id="undo-btn" class="bg-gradient-to-b from-gray-600 to-gray-800 hover:from-gray-500 hover:to-gray-700 text-white font-bold h-32 px-8 rounded-2xl shadow-xl active:scale-95 transition flex items-center justify-center text-xl uppercase border-t border-gray-500">Deshacer</button>
-                <button id="pause-timer-btn" class="bg-gradient-to-b from-yellow-600 to-yellow-800 hover:from-yellow-500 hover:to-yellow-700 text-white font-bold h-32 px-8 rounded-2xl shadow-xl active:scale-95 transition flex items-center justify-center text-xl uppercase border-t border-yellow-500">Pausa</button>
-                <button id="finish-game-btn" class="bg-gradient-to-b from-purple-700 to-purple-900 hover:from-purple-600 hover:to-purple-800 text-white font-bold h-32 px-8 rounded-2xl shadow-xl active:scale-95 transition flex items-center justify-center text-xl uppercase border-t border-purple-500">Fin</button>
-                <button id="reset-btn" class="bg-gradient-to-b from-red-700 to-red-900 hover:from-red-600 hover:to-red-800 text-white font-bold h-32 px-8 rounded-2xl shadow-xl active:scale-95 transition flex items-center justify-center text-xl uppercase border-t border-red-500">Salir</button>
-            </div>
+            
+            <button id="undo-btn" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 px-4 rounded-lg shadow active:scale-95 transition">Deshacer</button>
+            <button id="pause-timer-btn" class="bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-3 px-4 rounded-lg shadow active:scale-95 transition">Pausa</button>
+            <button id="finish-game-btn" class="bg-purple-700 hover:bg-purple-600 text-white font-bold py-3 px-4 rounded-lg shadow active:scale-95 transition">Fin</button>
+            <button id="reset-btn" class="bg-red-700 hover:bg-red-600 text-white font-bold py-3 px-4 rounded-lg shadow active:scale-95 transition">Salir</button>
         </footer>
 
     </div>
 
     <div id="confirmation-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 hidden">
-        <div class="bg-gray-800 p-8 rounded-2xl shadow-2xl max-w-sm w-full border border-gray-600">
-            <h3 id="modal-title" class="text-2xl font-bold mb-4 text-white">Confirmación</h3>
+        <div class="bg-gray-800 p-6 rounded-lg shadow-xl max-w-sm w-full border border-gray-600">
+            <h3 id="modal-title" class="text-xl font-bold mb-4 text-white">Confirmación</h3>
             <div id="modal-content" class="text-gray-300 mb-6"></div>
             <div class="flex justify-end space-x-3">
-                <button id="modal-cancel-btn" class="px-5 py-2 rounded-lg bg-gray-600 hover:bg-gray-500 text-white font-bold">Cancelar</button>
-                <button id="modal-confirm-btn" class="px-5 py-2 rounded-lg bg-red-600 hover:bg-red-500 text-white font-bold">Confirmar</button>
+                <button id="modal-cancel-btn" class="px-4 py-2 rounded bg-gray-600 hover:bg-gray-500 text-white font-bold">Cancelar</button>
+                <button id="modal-confirm-btn" class="px-4 py-2 rounded bg-red-600 hover:bg-red-500 text-white font-bold">Confirmar</button>
             </div>
         </div>
     </div>
@@ -254,21 +242,6 @@
             if (now - lastTouchEnd <= 300) { }
             lastTouchEnd = now;
         }, false);
-
-        // --- FUNCION FIT TEXT MEJORADA ---
-        function fitText(element) {
-            if (!element) return;
-            // Restablecer a grande para medir el desbordamiento real
-            let fontSize = 3.5; 
-            element.style.fontSize = fontSize + 'rem';
-            const minSize = 1.0; 
-            
-            // Reducir hasta que quepa (scrollWidth > clientWidth)
-            while ( (element.scrollWidth > element.clientWidth) && (fontSize > minSize) ) {
-                fontSize -= 0.1;
-                element.style.fontSize = fontSize + 'rem';
-            }
-        }
 
         document.addEventListener('DOMContentLoaded', () => {
             const countries = [
@@ -299,7 +272,7 @@
             };
             populateCountrySelects();
 
-            // Toggle P2 Setup Logic
+            // Lógica para ocultar/mostrar Jugador 2
             const numPlayersSelect = document.getElementById('num-players');
             const p2SetupContainer = document.getElementById('player2-setup-container');
             
@@ -311,7 +284,7 @@
                 }
             }
             numPlayersSelect.addEventListener('change', toggleP2Setup);
-            toggleP2Setup(); // Run on init
+            toggleP2Setup(); // Ejecutar al inicio
 
             let state = {
                 score1: 0, score2: 0, inningScore1: 0, inningScore2: 0, innings: 0, currentPlayer: 1, 
@@ -410,10 +383,9 @@
             }
 
             function updateUI() {
-                if(document.activeElement !== els.p1Name) els.p1Name.value = document.getElementById('player1-setup-name').value;
-                if(document.activeElement !== els.p2Name) els.p2Name.value = document.getElementById('player2-setup-name').value;
-
-                // NOTA: fitText() eliminado de aquí para evitar "baile"
+                // Actualizar nombres desde inputs de setup
+                els.p1Name.value = document.getElementById('player1-setup-name').value;
+                els.p2Name.value = document.getElementById('player2-setup-name').value;
 
                 els.p1Flag.src = getFlagUrl(state.player1Flag);
                 els.p2Flag.src = getFlagUrl(state.player2Flag);
@@ -437,7 +409,7 @@
                     els.p1Panel.classList.remove('w-1/2'); els.p1Panel.classList.add('w-full', 'border-r-0');
                 } else {
                     els.p2Panel.classList.remove('hidden');
-                    els.p1Panel.classList.remove('w-full', 'border-r-0'); els.p1Panel.classList.add('w-1/2', 'border-r-2');
+                    els.p1Panel.classList.remove('w-full', 'border-r-0'); els.p1Panel.classList.add('w-1/2', 'border-r');
                 }
 
                 const currentInn = state.innings + 1;
@@ -451,7 +423,7 @@
 
                 const pBtn = document.getElementById('pause-timer-btn');
                 pBtn.textContent = state.isPaused ? "Reanudar" : "Pausa";
-                pBtn.className = state.isPaused ? "bg-green-600 hover:bg-green-500 text-white font-bold h-32 px-6 rounded-xl shadow-lg active:scale-95 transition flex items-center justify-center border-t border-green-400" : "bg-gradient-to-b from-yellow-600 to-yellow-800 hover:from-yellow-500 hover:to-yellow-700 text-white font-bold h-32 px-8 rounded-2xl shadow-xl active:scale-95 transition flex items-center justify-center text-xl uppercase border-t border-yellow-500";
+                pBtn.className = state.isPaused ? "bg-green-600 hover:bg-green-500 text-white font-bold py-3 px-4 rounded-lg shadow active:scale-95 transition" : "bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-3 px-4 rounded-lg shadow active:scale-95 transition";
             }
 
             function finishGame(reason) {
@@ -537,9 +509,6 @@
                 els.setup.classList.add('hidden'); els.app.classList.remove('hidden');
                 if(audioCtx.state === 'suspended') audioCtx.resume();
                 
-                // Ejecutar ajuste de texto inicial
-                fitText(els.p1Name); fitText(els.p2Name);
-
                 state.startTime = Date.now();
                 runTimer(); resetShot(); updateUI();
             };
@@ -552,11 +521,6 @@
             document.getElementById('init-timer-btn').onclick = resetShot;
             document.getElementById('finish-game-btn').onclick = () => finishGame("Finalizado Manualmente");
             
-            // Listeners para auto-ajuste al escribir
-            els.p1Name.addEventListener('input', () => fitText(els.p1Name));
-            els.p2Name.addEventListener('input', () => fitText(els.p2Name));
-            window.addEventListener('resize', () => { fitText(els.p1Name); fitText(els.p2Name); });
-
             document.getElementById('undo-point-1').onclick = () => {
                if(state.score1>0 && state.inningScore1>0) {
                    const prev = JSON.parse(JSON.stringify(state)); if(history.length>50) history.shift(); history.push(prev);
