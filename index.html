@@ -6,7 +6,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
-    <title>Marcador de Billar (iPad Pro)</title>
+    <title>Marcador de Billar (Auto-Fit Names)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,7 +21,6 @@
             overflow: hidden;
         }
 
-        /* Inputs interactivos pero sin flechas */
         input[type="text"], input[type="number"], select {
             -webkit-user-select: text;
             user-select: text;
@@ -35,50 +34,43 @@
             -moz-appearance: textfield;
         }
 
-        /* Estilos de Paneles */
-        .player-active {
-            box-shadow: inset 0 0 0 4px #FACC15; /* Borde interior dorado */
-        }
-        .player-active-bg {
-            background-color: #7f1d1d; /* Rojo oscuro intenso */
-        }
-        .player-inactive-bg {
-            background-color: #1f2937; /* Gris oscuro */
-        }
+        .player-active { box-shadow: inset 0 0 0 6px #FACC15; }
+        .player-active-bg { background-color: #7f1d1d; }
+        .player-inactive-bg { background-color: #111827; }
 
-        /* Tipografía Gigante Responsive para el marcador central */
-        .text-score { font-size: 8rem; line-height: 1; }
-        @media (max-width: 1024px) { .text-score { font-size: 6rem; } } 
-        @media (max-width: 768px) { .text-score { font-size: 5rem; } }
+        /* Score Size */
+        .text-score { font-size: 9rem; line-height: 1; }
+        @media (max-width: 1024px) { .text-score { font-size: 7rem; } } 
+        @media (max-width: 768px) { .text-score { font-size: 6rem; } }
 
         /* Shot Clock */
         .shot-clock-bar-container { display: flex; height: 100%; width: 100%; gap: 2px; }
-        .clock-segment { flex: 1; height: 30px; background-color: #374151; border-radius: 2px; }
-        
+        .clock-segment { flex: 1; height: 35px; background-color: #374151; border-radius: 2px; }
         .segment-green { background-color: #22c55e; box-shadow: 0 0 4px #22c55e; }
         .segment-orange { background-color: #f97316; box-shadow: 0 0 4px #f97316; }
         .segment-red { background-color: #ef4444; box-shadow: 0 0 8px #ef4444; }
         
-        /* Banderas */
         .flag-icon {
             display: block;
             border-radius: 4px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
-            margin-top: 4px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.6);
+            margin-top: 8px;
         }
 
-        /* Nombre del jugador auto-escalable */
+        /* Input Nombre: Empieza grande, el JS lo reducirá si es necesario */
         .player-name-input {
             background: transparent;
             color: white;
-            font-weight: 800;
+            font-weight: 900;
             border: none;
             outline: none;
             width: 100%;
             padding: 0;
             margin: 0;
             line-height: 1.1;
-            transition: font-size 0.1s;
+            white-space: nowrap;
+            overflow: hidden;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
         }
         .player-name-input:focus {
             border-bottom: 2px solid #FACC15;
@@ -144,98 +136,98 @@
 
     <div id="app-content" class="w-full h-full flex flex-col hidden bg-gray-900">
         
-        <header class="bg-black/40 p-2 shrink-0 border-b border-gray-800">
+        <header class="bg-black/60 p-2 shrink-0 border-b border-gray-800">
             <div class="flex items-center justify-between gap-4 mb-2 px-2">
-                <h1 class="text-lg font-bold text-gray-500 hidden sm:block">3-Cushion Billiards</h1>
-                
-                <div id="shot-clock-wrapper" class="flex-1 flex items-center gap-3 bg-black border border-gray-700 rounded px-3 py-1 max-w-3xl mx-auto">
-                    <button id="init-timer-btn" style="background-color: #183b06;" class="w-8 h-8 flex items-center justify-center bg-gray-800 text-green-500 rounded font-bold hover:bg-gray-700 border border-gray-600 text-sm">I</button>
-                    <div id="shot-clock-number" class="text-4xl font-mono font-bold text-white w-16 text-center leading-none">40</div>
+                <div id="shot-clock-wrapper" class="flex-1 flex items-center gap-3 bg-black border border-gray-700 rounded-lg px-3 py-2 max-w-4xl mx-auto shadow-lg">
+                    <button id="init-timer-btn" style="background-color: #183b06;" class="w-10 h-10 flex items-center justify-center bg-gray-800 text-green-500 rounded font-bold hover:bg-gray-700 border border-gray-600 text-lg">I</button>
+                    <div id="shot-clock-number" class="text-5xl font-mono font-bold text-white w-20 text-center leading-none">40</div>
                     <div id="shot-clock-bars" class="shot-clock-bar-container flex-1"></div>
                 </div>
-                
                 <div class="hidden sm:block text-right">
-                    <div id="timer-display" class="text-xl font-mono text-gray-300">00:00:00</div>
+                    <div id="timer-display" class="text-2xl font-mono text-gray-400">00:00:00</div>
                 </div>
             </div>
-
-            <div class="flex justify-between items-end px-4 text-gray-400 text-xs font-bold uppercase tracking-widest">
-                <div>Meta: <span id="distancia-display" class="text-yellow-400 text-base">40</span></div>
-                <div class="sm:hidden text-center"><span id="timer-display-mobile" class="font-mono text-white">00:00:00</span></div>
-                <div>Límite: <span id="limit-display" class="text-blue-400 text-base">50</span></div>
+            <div class="flex justify-between items-end px-6 text-gray-500 text-xs font-black uppercase tracking-widest">
+                <div>Meta: <span id="distancia-display" class="text-yellow-500 text-lg">40</span></div>
+                <div class="sm:hidden text-center"><span id="timer-display-mobile" class="font-mono text-white text-lg">00:00:00</span></div>
+                <div>Límite: <span id="limit-display" class="text-blue-500 text-lg">50</span></div>
             </div>
         </header>
 
-        <div class="bg-gray-800 border-b border-gray-700 p-2 shrink-0 flex items-center justify-center">
+        <div class="bg-gray-800 border-b border-gray-700 p-2 shrink-0 flex items-center justify-center shadow-md z-20">
             <div class="text-center">
-                <span class="text-gray-400 text-xs sm:text-sm font-bold uppercase tracking-[0.2em] block mb-1">Entrada Actual</span>
-                <span id="innings-display" class="text-5xl sm:text-6xl font-black text-white leading-none">1</span>
+                <span class="text-gray-400 text-xs sm:text-sm font-bold uppercase tracking-[0.3em] block mb-0">Entrada</span>
+                <span id="innings-display" class="text-6xl font-black text-white leading-none tracking-tighter">1</span>
             </div>
         </div>
 
         <main class="flex flex-1 overflow-hidden relative">
             
-            <div id="player1-panel" class="relative w-1/2 flex flex-col border-r border-gray-900 transition-colors duration-300 player-inactive-bg">
+            <div id="player1-panel" class="relative w-1/2 flex flex-col border-r-2 border-black transition-colors duration-300 player-inactive-bg">
                 
-                <div class="absolute top-4 left-4 z-10 flex flex-col items-start w-[60%]">
-                    <input type="text" id="player1-name" value="Jugador 1" class="player-name-input text-3xl sm:text-4xl lg:text-5xl text-left" spellcheck="false">
-                    <img id="player1-flag-display" src="" class="flag-icon h-6 sm:h-8 w-auto mt-2 border border-white/20" alt="Flag">
+                <div class="absolute top-6 left-6 z-10 flex flex-col items-start w-[55%]">
+                    <div class="w-full">
+                        <input type="text" id="player1-name" value="Jugador 1" class="player-name-input text-left drop-shadow-md" spellcheck="false" style="font-size: 4rem;">
+                    </div>
+                    <img id="player1-flag-display" src="" class="flag-icon h-8 sm:h-10 w-auto border border-white/30" alt="Flag">
                 </div>
 
-                <div class="absolute top-4 right-4 z-10 bg-black/60 border border-gray-500 rounded-xl p-2 text-center min-w-[120px] shadow-xl">
-                    <span class="block text-[10px] uppercase text-gray-400 font-bold tracking-wider mb-1">Total</span>
-                    <span id="total-score-box-1" class="text-6xl sm:text-7xl font-black text-white leading-none block pb-1">0</span>
+                <div class="absolute top-6 right-6 z-10 bg-black/80 border-2 border-gray-500 rounded-2xl p-3 text-center min-w-[180px] shadow-2xl backdrop-blur-sm">
+                    <span class="block text-xs uppercase text-gray-400 font-bold tracking-widest mb-1">Total</span>
+                    <span id="total-score-box-1" class="text-7xl sm:text-8xl lg:text-9xl font-black text-white leading-none block pb-1">0</span>
                 </div>
 
-                <div class="flex-1 flex flex-col items-center justify-center cursor-pointer select-none touch-manipulation hover:bg-white/5 transition-colors" id="touch-area-1">
-                    <div id="score1-display" class="text-score font-black text-yellow-400 leading-none drop-shadow-lg">0</div>
-                    <div class="mt-2 text-gray-300 font-bold text-2xl sm:text-3xl tracking-wide opacity-80">
+                <div class="flex-1 flex flex-col items-center justify-center cursor-pointer select-none touch-manipulation hover:bg-white/5 transition-colors pt-20" id="touch-area-1">
+                    <div id="score1-display" class="text-score font-black text-yellow-400 leading-none drop-shadow-2xl filter brightness-110">0</div>
+                    <div class="mt-4 text-gray-300 font-bold text-3xl sm:text-4xl tracking-widest opacity-70">
                         Avg: <span id="avg1-display">0.000</span>
                     </div>
                 </div>
 
-                <div class="p-4 flex gap-3 mt-auto bg-black/20">
-                    <button id="add-point-1" class="flex-1 bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-lg text-xl shadow-lg active:scale-95 transition-transform">+1</button>
-                    <button id="undo-point-1" class="px-6 bg-gray-600 hover:bg-gray-500 text-white font-bold rounded-lg text-xl shadow-lg active:scale-95 transition-transform">↩</button>
+                <div class="p-4 flex gap-4 mt-auto bg-black/40 backdrop-blur-md border-t border-white/10">
+                    <button id="add-point-1" class="flex-1 bg-gradient-to-b from-green-500 to-green-700 hover:from-green-400 hover:to-green-600 text-white font-black h-32 rounded-2xl text-4xl shadow-xl active:scale-95 transition-transform flex items-center justify-center border-t border-green-400">+1</button>
+                    <button id="undo-point-1" class="w-36 bg-gradient-to-b from-gray-600 to-gray-800 hover:from-gray-500 hover:to-gray-700 text-white font-black rounded-2xl text-5xl shadow-xl active:scale-95 transition-transform h-32 flex items-center justify-center border-t border-gray-500">↩</button>
                 </div>
             </div>
             
             <div id="player2-panel" class="relative w-1/2 flex flex-col transition-colors duration-300 player-inactive-bg">
                 
-                <div class="absolute top-4 left-4 z-10 flex flex-col items-start w-[60%]">
-                    <input type="text" id="player2-name" value="Jugador 2" class="player-name-input text-3xl sm:text-4xl lg:text-5xl text-left" spellcheck="false">
-                    <img id="player2-flag-display" src="" class="flag-icon h-6 sm:h-8 w-auto mt-2 border border-white/20" alt="Flag">
+                <div class="absolute top-6 left-6 z-10 flex flex-col items-start w-[55%]">
+                    <div class="w-full">
+                        <input type="text" id="player2-name" value="Jugador 2" class="player-name-input text-left drop-shadow-md" spellcheck="false" style="font-size: 4rem;">
+                    </div>
+                    <img id="player2-flag-display" src="" class="flag-icon h-8 sm:h-10 w-auto border border-white/30" alt="Flag">
                 </div>
 
-                <div class="absolute top-4 right-4 z-10 bg-black/60 border border-gray-500 rounded-xl p-2 text-center min-w-[120px] shadow-xl">
-                    <span class="block text-[10px] uppercase text-gray-400 font-bold tracking-wider mb-1">Total</span>
-                    <span id="total-score-box-2" class="text-6xl sm:text-7xl font-black text-white leading-none block pb-1">0</span>
+                <div class="absolute top-6 right-6 z-10 bg-black/80 border-2 border-gray-500 rounded-2xl p-3 text-center min-w-[180px] shadow-2xl backdrop-blur-sm">
+                    <span class="block text-xs uppercase text-gray-400 font-bold tracking-widest mb-1">Total</span>
+                    <span id="total-score-box-2" class="text-7xl sm:text-8xl lg:text-9xl font-black text-white leading-none block pb-1">0</span>
                 </div>
 
-                <div class="flex-1 flex flex-col items-center justify-center cursor-pointer select-none touch-manipulation hover:bg-white/5 transition-colors" id="touch-area-2">
-                    <div id="score2-display" class="text-score font-black text-yellow-400 leading-none drop-shadow-lg">0</div>
-                    <div class="mt-2 text-gray-300 font-bold text-2xl sm:text-3xl tracking-wide opacity-80">
+                <div class="flex-1 flex flex-col items-center justify-center cursor-pointer select-none touch-manipulation hover:bg-white/5 transition-colors pt-20" id="touch-area-2">
+                    <div id="score2-display" class="text-score font-black text-yellow-400 leading-none drop-shadow-2xl filter brightness-110">0</div>
+                    <div class="mt-4 text-gray-300 font-bold text-3xl sm:text-4xl tracking-widest opacity-70">
                         Avg: <span id="avg2-display">0.000</span>
                     </div>
                 </div>
 
-                <div class="p-4 flex gap-3 mt-auto bg-black/20">
-                    <button id="add-point-2" class="flex-1 bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-lg text-xl shadow-lg active:scale-95 transition-transform">+1</button>
-                    <button id="undo-point-2" class="px-6 bg-gray-600 hover:bg-gray-500 text-white font-bold rounded-lg text-xl shadow-lg active:scale-95 transition-transform">↩</button>
+                <div class="p-4 flex gap-4 mt-auto bg-black/40 backdrop-blur-md border-t border-white/10">
+                    <button id="add-point-2" class="flex-1 bg-gradient-to-b from-green-500 to-green-700 hover:from-green-400 hover:to-green-600 text-white font-black h-32 rounded-2xl text-4xl shadow-xl active:scale-95 transition-transform flex items-center justify-center border-t border-green-400">+1</button>
+                    <button id="undo-point-2" class="w-36 bg-gradient-to-b from-gray-600 to-gray-800 hover:from-gray-500 hover:to-gray-700 text-white font-black rounded-2xl text-5xl shadow-xl active:scale-95 transition-transform h-32 flex items-center justify-center border-t border-gray-500">↩</button>
                 </div>
             </div>
 
         </main>
 
-        <footer class="bg-gray-900 p-3 shrink-0 border-t border-gray-700 flex gap-2 overflow-x-auto">
-            <button id="next-inning-btn" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-4 rounded-xl text-lg sm:text-xl shadow-lg active:scale-95 transition whitespace-nowrap min-w-[140px]">
-                CAMBIO TURNO / FALLO
+        <footer class="bg-gray-950 p-4 shrink-0 border-t border-gray-800 flex gap-3 overflow-x-auto shadow-2xl z-30">
+            <button id="next-inning-btn" class="flex-1 bg-gradient-to-b from-blue-600 to-blue-800 hover:from-blue-500 hover:to-blue-700 text-white font-black h-32 px-4 rounded-2xl text-2xl sm:text-3xl shadow-xl active:scale-95 transition whitespace-nowrap min-w-[200px] flex items-center justify-center uppercase tracking-wide border-t border-blue-400">
+                CAMBIO TURNO
             </button>
-            <div class="flex gap-2">
-                <button id="undo-btn" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-4 px-6 rounded-xl shadow-lg active:scale-95 transition">Deshacer</button>
-                <button id="pause-timer-btn" class="bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-4 px-6 rounded-xl shadow-lg active:scale-95 transition">Pausa</button>
-                <button id="finish-game-btn" class="bg-purple-700 hover:bg-purple-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg active:scale-95 transition">Fin</button>
-                <button id="reset-btn" class="bg-red-700 hover:bg-red-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg active:scale-95 transition">Salir</button>
+            <div class="flex gap-3">
+                <button id="undo-btn" class="bg-gradient-to-b from-gray-600 to-gray-800 hover:from-gray-500 hover:to-gray-700 text-white font-bold h-32 px-8 rounded-2xl shadow-xl active:scale-95 transition flex items-center justify-center text-xl uppercase border-t border-gray-500">Deshacer</button>
+                <button id="pause-timer-btn" class="bg-gradient-to-b from-yellow-600 to-yellow-800 hover:from-yellow-500 hover:to-yellow-700 text-white font-bold h-32 px-8 rounded-2xl shadow-xl active:scale-95 transition flex items-center justify-center text-xl uppercase border-t border-yellow-500">Pausa</button>
+                <button id="finish-game-btn" class="bg-gradient-to-b from-purple-700 to-purple-900 hover:from-purple-600 hover:to-purple-800 text-white font-bold h-32 px-8 rounded-2xl shadow-xl active:scale-95 transition flex items-center justify-center text-xl uppercase border-t border-purple-500">Fin</button>
+                <button id="reset-btn" class="bg-gradient-to-b from-red-700 to-red-900 hover:from-red-600 hover:to-red-800 text-white font-bold h-32 px-8 rounded-2xl shadow-xl active:scale-95 transition flex items-center justify-center text-xl uppercase border-t border-red-500">Salir</button>
             </div>
         </footer>
 
@@ -253,58 +245,46 @@
     </div>
 
     <script>
-        // --- SCRIPT ANTI-ZOOM & GESTOS ---
         document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
         let lastTouchEnd = 0;
         document.addEventListener('touchend', function (event) {
             const now = (new Date()).getTime();
-            if (now - lastTouchEnd <= 300) { /* event.preventDefault(); */ }
+            if (now - lastTouchEnd <= 300) { }
             lastTouchEnd = now;
         }, false);
 
-        // --- FUNCIÓN AUTO-FIT TEXT (AJUSTA EL TAMAÑO DEL NOMBRE) ---
+        // --- FUNCION FIT TEXT MEJORADA (Se ejecuta SOLO al inicio o al escribir) ---
         function fitText(element) {
             if (!element) return;
-            // Reiniciar tamaño para medir
-            element.style.fontSize = '3rem'; // Base size (tailwindcss text-5xl approx)
             
-            // Reducir hasta que quepa (contenedor padre 60% width)
-            let fontSize = 3; // rem
-            const minSize = 1.2; // rem
+            // 1. Reseteamos a un tamaño grande base
+            let fontSize = 4; // rem start size
+            element.style.fontSize = fontSize + 'rem';
             
-            // Bucle simple de reducción
-            while (element.scrollWidth > element.offsetWidth && fontSize > minSize) {
+            // 2. Reducir mientras haya overflow (scrollWidth > clientWidth)
+            const minSize = 1; // 1rem min size
+            
+            // Loop de reducción
+            while ( (element.scrollWidth > element.clientWidth) && (fontSize > minSize) ) {
                 fontSize -= 0.1;
-                element.style.fontSize = `${fontSize}rem`;
+                element.style.fontSize = fontSize + 'rem';
             }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            
-            // --- DATOS DE PAÍSES ---
             const countries = [
-                { name: "Alemania", code: "de" }, { name: "Argentina", code: "ar" },
-                { name: "Austria", code: "at" }, { name: "Bélgica", code: "be" },
-                { name: "Bolivia", code: "bo" }, { name: "Brasil", code: "br" },
-                { name: "Canadá", code: "ca" }, { name: "Chile", code: "cl" },
-                { name: "China", code: "cn" }, { name: "Colombia", code: "co" },
-                { name: "Corea del Sur", code: "kr" }, { name: "Costa Rica", code: "cr" },
-                { name: "Dinamarca", code: "dk" }, { name: "Ecuador", code: "ec" },
-                { name: "Egipto", code: "eg" }, { name: "España", code: "es" },
-                { name: "Estados Unidos", code: "us" }, { name: "Filipinas", code: "ph" },
-                { name: "Francia", code: "fr" }, { name: "Gran Bretaña", code: "gb" },
-                { name: "Grecia", code: "gr" }, { name: "Holanda", code: "nl" },
-                { name: "Italia", code: "it" }, { name: "Japón", code: "jp" },
-                { name: "México", code: "mx" }, { name: "Nicaragua", code: "ni" },
-                { name: "Panamá", code: "pa" }, { name: "Paraguay", code: "py" },
-                { name: "Perú", code: "pe" }, { name: "Portugal", code: "pt" },
-                { name: "Suecia", code: "se" }, { name: "Suiza", code: "ch" },
-                { name: "Turquía", code: "tr" }, { name: "Uruguay", code: "uy" },
-                { name: "Venezuela", code: "ve" }, { name: "Vietnam", code: "vn" },
+                { name: "Alemania", code: "de" }, { name: "Argentina", code: "ar" }, { name: "Austria", code: "at" }, { name: "Bélgica", code: "be" },
+                { name: "Bolivia", code: "bo" }, { name: "Brasil", code: "br" }, { name: "Canadá", code: "ca" }, { name: "Chile", code: "cl" },
+                { name: "China", code: "cn" }, { name: "Colombia", code: "co" }, { name: "Corea del Sur", code: "kr" }, { name: "Costa Rica", code: "cr" },
+                { name: "Dinamarca", code: "dk" }, { name: "Ecuador", code: "ec" }, { name: "Egipto", code: "eg" }, { name: "España", code: "es" },
+                { name: "Estados Unidos", code: "us" }, { name: "Filipinas", code: "ph" }, { name: "Francia", code: "fr" }, { name: "Gran Bretaña", code: "gb" },
+                { name: "Grecia", code: "gr" }, { name: "Holanda", code: "nl" }, { name: "Italia", code: "it" }, { name: "Japón", code: "jp" },
+                { name: "México", code: "mx" }, { name: "Nicaragua", code: "ni" }, { name: "Panamá", code: "pa" }, { name: "Paraguay", code: "py" },
+                { name: "Perú", code: "pe" }, { name: "Portugal", code: "pt" }, { name: "Suecia", code: "se" }, { name: "Suiza", code: "ch" },
+                { name: "Turquía", code: "tr" }, { name: "Uruguay", code: "uy" }, { name: "Venezuela", code: "ve" }, { name: "Vietnam", code: "vn" },
                 { name: "Mundo / Otro", code: "un" }
             ];
 
-            // Poblar Selectores de País
             const populateCountrySelects = () => {
                 ['player1-country', 'player2-country'].forEach((id, index) => {
                     const select = document.getElementById(id);
@@ -320,48 +300,29 @@
             };
             populateCountrySelects();
 
-            // --- ESTADO ---
             let state = {
-                score1: 0, score2: 0, 
-                inningScore1: 0, inningScore2: 0, 
-                innings: 0, currentPlayer: 1, 
-                startTime: null, timerInterval: null, 
-                numPlayers: 2, regulatoryTimer: true, 
-                isPaused: false, pausedTime: 0, pauseStartTime: null,
-                targetScore: 40, targetInnings: 50,
-                player1Flag: "co", player2Flag: "us",
-                highRun1: 0, highRun2: 0, zeros1: 0, zeros2: 0,
+                score1: 0, score2: 0, inningScore1: 0, inningScore2: 0, innings: 0, currentPlayer: 1, 
+                startTime: null, timerInterval: null, numPlayers: 2, regulatoryTimer: true, 
+                isPaused: false, pausedTime: 0, pauseStartTime: null, targetScore: 40, targetInnings: 50,
+                player1Flag: "co", player2Flag: "us", highRun1: 0, highRun2: 0, zeros1: 0, zeros2: 0,
                 shotClockTime: 0, shotClockInterval: null
             };
             let history = [];
             const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-            // --- REFERENCIAS DOM ---
             const els = {
-                app: document.getElementById('app-content'),
-                setup: document.getElementById('setup-modal'),
-                p1Name: document.getElementById('player1-name'),
-                p2Name: document.getElementById('player2-name'),
-                p1Panel: document.getElementById('player1-panel'),
-                p2Panel: document.getElementById('player2-panel'),
-                score1: document.getElementById('score1-display'),
-                score2: document.getElementById('score2-display'),
-                total1: document.getElementById('total-score-box-1'),
-                total2: document.getElementById('total-score-box-2'),
-                avg1: document.getElementById('avg1-display'),
-                avg2: document.getElementById('avg2-display'),
-                innings: document.getElementById('innings-display'),
-                timer: document.getElementById('timer-display'),
-                timerMobile: document.getElementById('timer-display-mobile'),
-                shotNum: document.getElementById('shot-clock-number'),
-                shotBars: document.getElementById('shot-clock-bars'),
-                p1Flag: document.getElementById('player1-flag-display'),
-                p2Flag: document.getElementById('player2-flag-display'),
-                metaDist: document.getElementById('distancia-display'),
+                app: document.getElementById('app-content'), setup: document.getElementById('setup-modal'),
+                p1Name: document.getElementById('player1-name'), p2Name: document.getElementById('player2-name'),
+                p1Panel: document.getElementById('player1-panel'), p2Panel: document.getElementById('player2-panel'),
+                score1: document.getElementById('score1-display'), score2: document.getElementById('score2-display'),
+                total1: document.getElementById('total-score-box-1'), total2: document.getElementById('total-score-box-2'),
+                avg1: document.getElementById('avg1-display'), avg2: document.getElementById('avg2-display'),
+                innings: document.getElementById('innings-display'), timer: document.getElementById('timer-display'),
+                timerMobile: document.getElementById('timer-display-mobile'), shotNum: document.getElementById('shot-clock-number'),
+                shotBars: document.getElementById('shot-clock-bars'), p1Flag: document.getElementById('player1-flag-display'),
+                p2Flag: document.getElementById('player2-flag-display'), metaDist: document.getElementById('distancia-display'),
                 metaLimit: document.getElementById('limit-display')
             };
-
-            // --- LÓGICA PRINCIPAL ---
 
             function getFlagUrl(code) { return `https://flagcdn.com/w80/${code}.png`; }
             function formatTime(s) {
@@ -379,7 +340,6 @@
                 o.start(); o.stop(audioCtx.currentTime + 0.5);
             }
 
-            // Init Shot Clock UI
             els.shotBars.innerHTML = '';
             for(let i=0; i<40; i++) {
                 const d = document.createElement('div'); d.className = 'clock-segment'; d.id = `seg-${i}`;
@@ -389,17 +349,12 @@
             function updateShotVisual(t) {
                 const isOver = t > 40;
                 const barIndex = t - 1;
-                
-                // Si pasamos 40, todo rojo
                 if (isOver) {
                     document.querySelectorAll('.clock-segment').forEach(b => {
-                        b.classList.remove('segment-green', 'segment-orange');
-                        b.classList.add('segment-red');
+                        b.classList.remove('segment-green', 'segment-orange'); b.classList.add('segment-red');
                     });
                     return;
                 }
-
-                // Pintado progresivo normal
                 const bar = document.getElementById(`seg-${barIndex}`);
                 if (bar) {
                     if (t <= 20) bar.classList.add('segment-green');
@@ -414,8 +369,7 @@
                     if (state.isPaused) return;
                     const e = Math.floor((Date.now() - state.startTime - state.pausedTime) / 1000);
                     const txt = formatTime(e);
-                    els.timer.textContent = txt;
-                    els.timerMobile.textContent = txt;
+                    els.timer.textContent = txt; els.timerMobile.textContent = txt;
                 }, 1000);
             }
 
@@ -424,7 +378,6 @@
                 state.shotClockInterval = setInterval(() => {
                     if (state.isPaused) return;
                     state.shotClockTime++;
-                    
                     if (state.regulatoryTimer) {
                         els.shotNum.textContent = 40 - state.shotClockTime;
                         if (state.shotClockTime >= 55) { playAlarm(); resetShot(); return; }
@@ -444,25 +397,15 @@
             }
 
             function updateUI() {
-                // Sincronizar inputs
                 if(document.activeElement !== els.p1Name) els.p1Name.value = document.getElementById('player1-setup-name').value;
                 if(document.activeElement !== els.p2Name) els.p2Name.value = document.getElementById('player2-setup-name').value;
 
-                // Auto-fit text
-                fitText(els.p1Name);
-                fitText(els.p2Name);
-
-                // Banderas
                 els.p1Flag.src = getFlagUrl(state.player1Flag);
                 els.p2Flag.src = getFlagUrl(state.player2Flag);
 
-                // Scores
-                els.score1.textContent = state.inningScore1;
-                els.score2.textContent = state.inningScore2;
-                els.total1.textContent = state.score1;
-                els.total2.textContent = state.score2;
+                els.score1.textContent = state.inningScore1; els.score2.textContent = state.inningScore2;
+                els.total1.textContent = state.score1; els.total2.textContent = state.score2;
 
-                // Active Panel Logic (Estilos)
                 els.p1Panel.classList.remove('player-active', 'player-active-bg', 'player-inactive-bg');
                 els.p2Panel.classList.remove('player-active', 'player-active-bg', 'player-inactive-bg');
 
@@ -474,16 +417,14 @@
                     els.p1Panel.classList.add('player-inactive-bg');
                 }
 
-                // Layout 1 Player
                 if (state.numPlayers === 1) {
                     els.p2Panel.classList.add('hidden');
                     els.p1Panel.classList.remove('w-1/2'); els.p1Panel.classList.add('w-full', 'border-r-0');
                 } else {
                     els.p2Panel.classList.remove('hidden');
-                    els.p1Panel.classList.remove('w-full', 'border-r-0'); els.p1Panel.classList.add('w-1/2', 'border-r');
+                    els.p1Panel.classList.remove('w-full', 'border-r-0'); els.p1Panel.classList.add('w-1/2', 'border-r-2');
                 }
 
-                // Promedios y Entradas
                 const currentInn = state.innings + 1;
                 els.innings.textContent = currentInn;
 
@@ -493,10 +434,9 @@
                 els.avg1.textContent = calcAvg(state.score1, div1);
                 els.avg2.textContent = calcAvg(state.score2, div2);
 
-                // Pausa btn
                 const pBtn = document.getElementById('pause-timer-btn');
                 pBtn.textContent = state.isPaused ? "Reanudar" : "Pausa";
-                pBtn.className = state.isPaused ? "bg-green-600 hover:bg-green-500 text-white font-bold py-4 px-6 rounded-xl shadow-lg active:scale-95 transition" : "bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-4 px-6 rounded-xl shadow-lg active:scale-95 transition";
+                pBtn.className = state.isPaused ? "bg-green-600 hover:bg-green-500 text-white font-bold h-32 px-6 rounded-xl shadow-lg active:scale-95 transition flex items-center justify-center border-t border-green-400" : "bg-gradient-to-b from-yellow-600 to-yellow-800 hover:from-yellow-500 hover:to-yellow-700 text-white font-bold h-32 px-8 rounded-2xl shadow-xl active:scale-95 transition flex items-center justify-center text-xl uppercase border-t border-yellow-500";
             }
 
             function finishGame(reason) {
@@ -507,55 +447,28 @@
                 if(state.currentPlayer===2) p1d = state.innings + 1;
                 let p2d = state.innings + (state.currentPlayer===2?1:0);
                 
-                // Si fue por límite
-                if(state.targetInnings>0 && state.innings >= state.targetInnings) {
-                    p1d = state.innings; p2d = state.innings;
-                }
+                if(state.targetInnings>0 && state.innings >= state.targetInnings) { p1d = state.innings; p2d = state.innings; }
                 if(p1d===0) p1d=1; if(p2d===0) p2d=1;
 
                 const tSeconds = Math.floor(((state.pauseStartTime||Date.now()) - state.startTime - state.pausedTime)/1000);
                 
                 const modal = document.getElementById('confirmation-modal');
                 const content = document.getElementById('modal-content');
-                const title = document.getElementById('modal-title');
-                
-                title.textContent = "Partida Finalizada";
+                document.getElementById('modal-title').textContent = "Partida Finalizada";
                 let html = `
                     <div class="text-center mb-4 text-yellow-400 font-bold border-b border-gray-600 pb-2">${reason||""}</div>
-                    <div class="flex justify-between text-sm mb-4">
-                        <span>⏱ ${formatTime(tSeconds)}</span>
-                        <span>Entradas: ${Math.max(p1d, p2d)}</span>
-                    </div>
+                    <div class="flex justify-between text-sm mb-4"><span>⏱ ${formatTime(tSeconds)}</span><span>Entradas: ${Math.max(p1d, p2d)}</span></div>
                     <div class="bg-black/30 p-3 rounded mb-2">
-                        <div class="flex items-center gap-2 mb-1">
-                            <img src="${getFlagUrl(state.player1Flag)}" class="h-4">
-                            <strong class="text-yellow-200">${els.p1Name.value}</strong>
-                        </div>
-                        <div class="grid grid-cols-2 text-sm gap-y-1">
-                            <span>Carambolas: <b>${state.score1}</b></span>
-                            <span>Prom: <b>${calcAvg(state.score1, p1d)}</b></span>
-                            <span>Serie Mayor: <b>${state.highRun1}</b></span>
-                            <span>Ceros: <b>${state.zeros1}</b></span>
-                        </div>
+                        <div class="flex items-center gap-2 mb-1"><img src="${getFlagUrl(state.player1Flag)}" class="h-4"><strong class="text-yellow-200">${els.p1Name.value}</strong></div>
+                        <div class="grid grid-cols-2 text-sm gap-y-1"><span>Car: <b>${state.score1}</b></span><span>Prom: <b>${calcAvg(state.score1, p1d)}</b></span><span>Mayor: <b>${state.highRun1}</b></span><span>Ceros: <b>${state.zeros1}</b></span></div>
                     </div>
                 `;
-                
                 if(state.numPlayers===2){
-                    html += `
-                    <div class="bg-black/30 p-3 rounded">
-                        <div class="flex items-center gap-2 mb-1">
-                            <img src="${getFlagUrl(state.player2Flag)}" class="h-4">
-                            <strong class="text-yellow-200">${els.p2Name.value}</strong>
-                        </div>
-                        <div class="grid grid-cols-2 text-sm gap-y-1">
-                            <span>Carambolas: <b>${state.score2}</b></span>
-                            <span>Prom: <b>${calcAvg(state.score2, p2d)}</b></span>
-                            <span>Serie Mayor: <b>${state.highRun2}</b></span>
-                            <span>Ceros: <b>${state.zeros2}</b></span>
-                        </div>
+                    html += `<div class="bg-black/30 p-3 rounded">
+                        <div class="flex items-center gap-2 mb-1"><img src="${getFlagUrl(state.player2Flag)}" class="h-4"><strong class="text-yellow-200">${els.p2Name.value}</strong></div>
+                        <div class="grid grid-cols-2 text-sm gap-y-1"><span>Car: <b>${state.score2}</b></span><span>Prom: <b>${calcAvg(state.score2, p2d)}</b></span><span>Mayor: <b>${state.highRun2}</b></span><span>Ceros: <b>${state.zeros2}</b></span></div>
                     </div>`;
                 }
-
                 content.innerHTML = html;
                 document.getElementById('modal-cancel-btn').style.display = 'none';
                 document.getElementById('modal-confirm-btn').textContent = "Cerrar";
@@ -563,7 +476,6 @@
                 modal.classList.remove('hidden');
             }
 
-            // --- ACCIONES ---
             function addPoint(p) {
                 const prev = JSON.parse(JSON.stringify(state)); prev.timerInterval=null; prev.shotClockInterval=null;
                 if(history.length>50) history.shift(); history.push(prev);
@@ -577,36 +489,25 @@
                     if(state.inningScore2 > state.highRun2) state.highRun2 = state.inningScore2;
                     if(state.targetScore>0 && state.score2>=state.targetScore) setTimeout(()=>finishGame("¡Meta Alcanzada!"),100);
                 }
-                
-                runTimer();
-                updateUI();
+                runTimer(); updateUI();
             }
 
             function nextInning() {
                 const prev = JSON.parse(JSON.stringify(state)); prev.timerInterval=null; prev.shotClockInterval=null;
                 if(history.length>50) history.shift(); history.push(prev);
 
-                // Zeros count
                 if(state.currentPlayer===1) { if(state.inningScore1===0) state.zeros1++; }
                 else { if(state.inningScore2===0) state.zeros2++; }
 
                 state.inningScore1 = 0; state.inningScore2 = 0;
 
-                if(state.numPlayers===1) {
-                    state.innings++;
-                } else {
-                    if(state.currentPlayer===1) state.currentPlayer=2;
-                    else { state.currentPlayer=1; state.innings++; }
-                }
+                if(state.numPlayers===1) { state.innings++; } 
+                else { if(state.currentPlayer===1) state.currentPlayer=2; else { state.currentPlayer=1; state.innings++; } }
 
-                runTimer();
-                resetShot();
-                updateUI();
-
+                runTimer(); resetShot(); updateUI();
                 if(state.targetInnings>0 && state.innings>=state.targetInnings) setTimeout(()=>finishGame("Límite de Entradas"),100);
             }
 
-            // Events
             document.getElementById('start-game-btn').onclick = () => {
                 state.numPlayers = parseInt(document.getElementById('num-players').value);
                 state.regulatoryTimer = (document.getElementById('regulatory-timer').value === 'yes');
@@ -618,99 +519,66 @@
                 els.metaDist.textContent = state.targetScore > 0 ? state.targetScore : "∞";
                 els.metaLimit.textContent = state.targetInnings > 0 ? state.targetInnings : "∞";
 
-                els.setup.classList.add('hidden');
-                els.app.classList.remove('hidden');
-                
+                els.setup.classList.add('hidden'); els.app.classList.remove('hidden');
                 if(audioCtx.state === 'suspended') audioCtx.resume();
                 
+                // Ejecutar fitText AQUI cuando el DOM ya es visible
+                fitText(els.p1Name); fitText(els.p2Name);
+
                 state.startTime = Date.now();
-                runTimer();
-                resetShot();
-                updateUI();
+                runTimer(); resetShot(); updateUI();
             };
 
-            // Touch Zones
             document.getElementById('touch-area-1').onclick = () => addPoint(1);
             document.getElementById('add-point-1').onclick = () => addPoint(1);
             document.getElementById('touch-area-2').onclick = () => { if(state.numPlayers===2) addPoint(2); };
             document.getElementById('add-point-2').onclick = () => { if(state.numPlayers===2) addPoint(2); };
-
             document.getElementById('next-inning-btn').onclick = nextInning;
-            
-            document.getElementById('undo-btn').onclick = () => {
-                if(history.length>0) {
-                    const h = history.pop();
-                    Object.assign(state, h);
-                    state.isPaused = false; // ensure not stuck
-                    runTimer();
-                    updateUI();
-                }
-            };
-
             document.getElementById('init-timer-btn').onclick = resetShot;
-
-            // Name inputs listeners for auto-resize
+            document.getElementById('finish-game-btn').onclick = () => finishGame("Finalizado Manualmente");
+            
+            // Listeners para escribir y ajustar texto
             els.p1Name.addEventListener('input', () => fitText(els.p1Name));
             els.p2Name.addEventListener('input', () => fitText(els.p2Name));
 
-            // Standard buttons (undo point specific)
             document.getElementById('undo-point-1').onclick = () => {
                if(state.score1>0 && state.inningScore1>0) {
-                   const prev = JSON.parse(JSON.stringify(state)); 
-                   if(history.length>50) history.shift(); history.push(prev);
-                   state.score1--; state.inningScore1--; 
-                   updateUI();
+                   const prev = JSON.parse(JSON.stringify(state)); if(history.length>50) history.shift(); history.push(prev);
+                   state.score1--; state.inningScore1--; updateUI();
                }
             };
             document.getElementById('undo-point-2').onclick = () => {
                if(state.numPlayers===2 && state.score2>0 && state.inningScore2>0) {
-                   const prev = JSON.parse(JSON.stringify(state)); 
-                   if(history.length>50) history.shift(); history.push(prev);
-                   state.score2--; state.inningScore2--; 
-                   updateUI();
+                   const prev = JSON.parse(JSON.stringify(state)); if(history.length>50) history.shift(); history.push(prev);
+                   state.score2--; state.inningScore2--; updateUI();
                }
             };
-
+            document.getElementById('undo-btn').onclick = () => {
+                if(history.length>0) { const h = history.pop(); Object.assign(state, h); state.isPaused = false; runTimer(); updateUI(); }
+            };
             document.getElementById('pause-timer-btn').onclick = () => {
                 if(!state.startTime) return;
                 state.isPaused = !state.isPaused;
-                if(state.isPaused) {
-                    state.pauseStartTime = Date.now();
-                } else {
-                    state.pausedTime += (Date.now() - state.pauseStartTime);
-                    state.pauseStartTime = null;
-                }
+                if(state.isPaused) state.pauseStartTime = Date.now(); else { state.pausedTime += (Date.now() - state.pauseStartTime); state.pauseStartTime = null; }
                 updateUI();
             };
-
-            document.getElementById('finish-game-btn').onclick = () => finishGame("Finalizado Manualmente");
-            
             document.getElementById('reset-btn').onclick = () => {
                 const modal = document.getElementById('confirmation-modal');
                 document.getElementById('modal-title').textContent = "¿Salir?";
                 document.getElementById('modal-content').innerHTML = "Perderás el progreso actual.";
                 document.getElementById('modal-cancel-btn').style.display = 'block';
                 document.getElementById('modal-confirm-btn').textContent = "Confirmar";
-                
                 document.getElementById('modal-confirm-btn').onclick = () => {
-                    clearInterval(state.shotClockInterval);
-                    clearInterval(state.timerInterval);
-                    els.app.classList.add('hidden');
-                    els.setup.classList.remove('hidden');
-                    modal.classList.add('hidden');
-                    // Reset Logic
+                    clearInterval(state.shotClockInterval); clearInterval(state.timerInterval);
+                    els.app.classList.add('hidden'); els.setup.classList.remove('hidden'); modal.classList.add('hidden');
                     state = {
-                        score1: 0, score2: 0, inningScore1: 0, inningScore2: 0, innings: 0,
-                        currentPlayer: 1, startTime: null, timerInterval: null,
-                        numPlayers: state.numPlayers, regulatoryTimer: state.regulatoryTimer,
-                        isPaused: false, pausedTime: 0, pauseStartTime: null,
-                        targetScore: 40, targetInnings: 50,
-                        player1Flag: state.player1Flag, player2Flag: state.player2Flag,
-                        highRun1: 0, highRun2: 0, zeros1: 0, zeros2: 0,
+                        score1: 0, score2: 0, inningScore1: 0, inningScore2: 0, innings: 0, currentPlayer: 1, 
+                        startTime: null, timerInterval: null, numPlayers: state.numPlayers, regulatoryTimer: state.regulatoryTimer, 
+                        isPaused: false, pausedTime: 0, pauseStartTime: null, targetScore: 40, targetInnings: 50,
+                        player1Flag: state.player1Flag, player2Flag: state.player2Flag, highRun1: 0, highRun2: 0, zeros1: 0, zeros2: 0,
                         shotClockTime: 0, shotClockInterval: null
                     };
-                    history = [];
-                    els.timer.textContent = "00:00:00";
+                    history = []; els.timer.textContent = "00:00:00";
                 };
                 modal.classList.remove('hidden');
                 document.getElementById('modal-cancel-btn').onclick = () => modal.classList.add('hidden');
