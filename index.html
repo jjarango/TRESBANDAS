@@ -6,7 +6,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
-    <title>Marcador de Billar (Auto-Fit Names)</title>
+    <title>Marcador de Billar (Flex Layout)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,29 +21,29 @@
             overflow: hidden;
         }
 
+        /* Inputs */
         input[type="text"], input[type="number"], select {
             -webkit-user-select: text;
             user-select: text;
         }
-        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-inner-spin-button, 
         input[type=number]::-webkit-outer-spin-button {
             -webkit-appearance: none;
             margin: 0;
         }
-        input[type=number] {
-            -moz-appearance: textfield;
-        }
+        input[type=number] { -moz-appearance: textfield; }
 
+        /* Paneles */
         .player-active { box-shadow: inset 0 0 0 6px #FACC15; }
         .player-active-bg { background-color: #7f1d1d; }
         .player-inactive-bg { background-color: #111827; }
 
-        /* Score Size */
-        .text-score { font-size: 9rem; line-height: 1; }
+        /* Textos */
+        .text-score { font-size: 8rem; line-height: 1; }
         @media (max-width: 1024px) { .text-score { font-size: 7rem; } } 
         @media (max-width: 768px) { .text-score { font-size: 6rem; } }
 
-        /* Shot Clock */
+        /* Reloj */
         .shot-clock-bar-container { display: flex; height: 100%; width: 100%; gap: 2px; }
         .clock-segment { flex: 1; height: 35px; background-color: #374151; border-radius: 2px; }
         .segment-green { background-color: #22c55e; box-shadow: 0 0 4px #22c55e; }
@@ -53,11 +53,10 @@
         .flag-icon {
             display: block;
             border-radius: 4px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.6);
-            margin-top: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
         }
 
-        /* Input Nombre: Empieza grande, el JS lo reducirá si es necesario */
+        /* Input Nombre: Empieza grande, JS reduce */
         .player-name-input {
             background: transparent;
             color: white;
@@ -69,12 +68,11 @@
             margin: 0;
             line-height: 1.1;
             white-space: nowrap;
-            overflow: hidden;
+            overflow: hidden; 
+            text-overflow: clip; /* No usar ellipsis para que el JS calcule bien el ancho total */
             text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
         }
-        .player-name-input:focus {
-            border-bottom: 2px solid #FACC15;
-        }
+        .player-name-input:focus { border-bottom: 2px solid #FACC15; }
     </style>
 </head>
 <body class="bg-black text-white min-h-screen flex flex-col items-center p-2 fixed w-full h-full inset-0"> 
@@ -103,8 +101,7 @@
                 <label class="block text-gray-400 text-xs uppercase tracking-widest font-bold mb-1">Jugador 1</label>
                 <div class="flex gap-2">
                     <input type="text" id="player1-setup-name" value="Jugador 1" class="flex-1 p-3 bg-gray-800 text-white rounded-lg border border-gray-600 focus:border-yellow-400 outline-none">
-                    <select id="player1-country" class="w-32 p-2 bg-gray-800 text-white rounded-lg border border-gray-600 text-sm text-center">
-                        </select>
+                    <select id="player1-country" class="w-32 p-2 bg-gray-800 text-white rounded-lg border border-gray-600 text-sm text-center"></select>
                 </div>
             </div>
 
@@ -112,8 +109,7 @@
                 <label class="block text-gray-400 text-xs uppercase tracking-widest font-bold mb-1">Jugador 2</label>
                 <div class="flex gap-2">
                     <input type="text" id="player2-setup-name" value="Jugador 2" class="flex-1 p-3 bg-gray-800 text-white rounded-lg border border-gray-600 focus:border-yellow-400 outline-none">
-                    <select id="player2-country" class="w-32 p-2 bg-gray-800 text-white rounded-lg border border-gray-600 text-sm text-center">
-                        </select>
+                    <select id="player2-country" class="w-32 p-2 bg-gray-800 text-white rounded-lg border border-gray-600 text-sm text-center"></select>
                 </div>
             </div>
 
@@ -154,10 +150,10 @@
             </div>
         </header>
 
-        <div class="bg-gray-800 border-b border-gray-700 p-2 shrink-0 flex items-center justify-center shadow-md z-20">
-            <div class="text-center">
-                <span class="text-gray-400 text-xs sm:text-sm font-bold uppercase tracking-[0.3em] block mb-0">Entrada</span>
-                <span id="innings-display" class="text-6xl font-black text-white leading-none tracking-tighter">1</span>
+        <div class="bg-gray-800 border-b border-gray-700 p-3 shrink-0 flex items-center justify-center shadow-md z-20">
+            <div class="flex items-baseline gap-4">
+                <span class="text-gray-400 text-xl sm:text-2xl font-black uppercase tracking-widest">ENTRADA:</span>
+                <span id="innings-display" class="text-5xl sm:text-6xl font-black text-white leading-none">1</span>
             </div>
         </div>
 
@@ -165,55 +161,61 @@
             
             <div id="player1-panel" class="relative w-1/2 flex flex-col border-r-2 border-black transition-colors duration-300 player-inactive-bg">
                 
-                <div class="absolute top-6 left-6 z-10 flex flex-col items-start w-[55%]">
-                    <div class="w-full">
-                        <input type="text" id="player1-name" value="Jugador 1" class="player-name-input text-left drop-shadow-md" spellcheck="false" style="font-size: 4rem;">
+                <div class="flex justify-between items-start p-4 sm:p-6 w-full z-10 shrink-0">
+                    
+                    <div class="flex-1 min-w-0 pr-4 flex flex-col items-start">
+                        <div class="w-full">
+                            <input type="text" id="player1-name" value="Jugador 1" class="player-name-input text-left drop-shadow-md" spellcheck="false" style="font-size: 3.5rem;">
+                        </div>
+                        <img id="player1-flag-display" src="" class="flag-icon h-8 sm:h-10 w-auto border border-white/30 mt-2" alt="Flag">
                     </div>
-                    <img id="player1-flag-display" src="" class="flag-icon h-8 sm:h-10 w-auto border border-white/30" alt="Flag">
+
+                    <div class="shrink-0 bg-black/80 border-2 border-gray-500 rounded-2xl p-2 text-center min-w-[140px] shadow-2xl backdrop-blur-sm">
+                        <span class="block text-[10px] uppercase text-gray-400 font-bold tracking-widest mb-1">Total</span>
+                        <span id="total-score-box-1" class="text-7xl sm:text-8xl lg:text-9xl font-black text-white leading-none block pb-2">0</span>
+                    </div>
                 </div>
 
-                <div class="absolute top-6 right-6 z-10 bg-black/80 border-2 border-gray-500 rounded-2xl p-3 text-center min-w-[180px] shadow-2xl backdrop-blur-sm">
-                    <span class="block text-xs uppercase text-gray-400 font-bold tracking-widest mb-1">Total</span>
-                    <span id="total-score-box-1" class="text-7xl sm:text-8xl lg:text-9xl font-black text-white leading-none block pb-1">0</span>
-                </div>
-
-                <div class="flex-1 flex flex-col items-center justify-center cursor-pointer select-none touch-manipulation hover:bg-white/5 transition-colors pt-20" id="touch-area-1">
+                <div class="flex-1 flex flex-col items-center justify-center cursor-pointer select-none touch-manipulation hover:bg-white/5 transition-colors -mt-10" id="touch-area-1">
                     <div id="score1-display" class="text-score font-black text-yellow-400 leading-none drop-shadow-2xl filter brightness-110">0</div>
                     <div class="mt-4 text-gray-300 font-bold text-3xl sm:text-4xl tracking-widest opacity-70">
                         Avg: <span id="avg1-display">0.000</span>
                     </div>
                 </div>
 
-                <div class="p-4 flex gap-4 mt-auto bg-black/40 backdrop-blur-md border-t border-white/10">
+                <div class="p-4 flex gap-4 mt-auto bg-black/40 backdrop-blur-md border-t border-white/10 shrink-0">
                     <button id="add-point-1" class="flex-1 bg-gradient-to-b from-green-500 to-green-700 hover:from-green-400 hover:to-green-600 text-white font-black h-32 rounded-2xl text-4xl shadow-xl active:scale-95 transition-transform flex items-center justify-center border-t border-green-400">+1</button>
-                    <button id="undo-point-1" class="w-36 bg-gradient-to-b from-gray-600 to-gray-800 hover:from-gray-500 hover:to-gray-700 text-white font-black rounded-2xl text-5xl shadow-xl active:scale-95 transition-transform h-32 flex items-center justify-center border-t border-gray-500">↩</button>
+                    <button id="undo-point-1" class="w-32 bg-gradient-to-b from-gray-600 to-gray-800 hover:from-gray-500 hover:to-gray-700 text-white font-black rounded-2xl text-5xl shadow-xl active:scale-95 transition-transform h-32 flex items-center justify-center border-t border-gray-500">↩</button>
                 </div>
             </div>
             
             <div id="player2-panel" class="relative w-1/2 flex flex-col transition-colors duration-300 player-inactive-bg">
                 
-                <div class="absolute top-6 left-6 z-10 flex flex-col items-start w-[55%]">
-                    <div class="w-full">
-                        <input type="text" id="player2-name" value="Jugador 2" class="player-name-input text-left drop-shadow-md" spellcheck="false" style="font-size: 4rem;">
+                <div class="flex justify-between items-start p-4 sm:p-6 w-full z-10 shrink-0">
+                    
+                    <div class="flex-1 min-w-0 pr-4 flex flex-col items-start">
+                        <div class="w-full">
+                            <input type="text" id="player2-name" value="Jugador 2" class="player-name-input text-left drop-shadow-md" spellcheck="false" style="font-size: 3.5rem;">
+                        </div>
+                        <img id="player2-flag-display" src="" class="flag-icon h-8 sm:h-10 w-auto border border-white/30 mt-2" alt="Flag">
                     </div>
-                    <img id="player2-flag-display" src="" class="flag-icon h-8 sm:h-10 w-auto border border-white/30" alt="Flag">
+
+                    <div class="shrink-0 bg-black/80 border-2 border-gray-500 rounded-2xl p-2 text-center min-w-[140px] shadow-2xl backdrop-blur-sm">
+                        <span class="block text-[10px] uppercase text-gray-400 font-bold tracking-widest mb-1">Total</span>
+                        <span id="total-score-box-2" class="text-7xl sm:text-8xl lg:text-9xl font-black text-white leading-none block pb-2">0</span>
+                    </div>
                 </div>
 
-                <div class="absolute top-6 right-6 z-10 bg-black/80 border-2 border-gray-500 rounded-2xl p-3 text-center min-w-[180px] shadow-2xl backdrop-blur-sm">
-                    <span class="block text-xs uppercase text-gray-400 font-bold tracking-widest mb-1">Total</span>
-                    <span id="total-score-box-2" class="text-7xl sm:text-8xl lg:text-9xl font-black text-white leading-none block pb-1">0</span>
-                </div>
-
-                <div class="flex-1 flex flex-col items-center justify-center cursor-pointer select-none touch-manipulation hover:bg-white/5 transition-colors pt-20" id="touch-area-2">
+                <div class="flex-1 flex flex-col items-center justify-center cursor-pointer select-none touch-manipulation hover:bg-white/5 transition-colors -mt-10" id="touch-area-2">
                     <div id="score2-display" class="text-score font-black text-yellow-400 leading-none drop-shadow-2xl filter brightness-110">0</div>
                     <div class="mt-4 text-gray-300 font-bold text-3xl sm:text-4xl tracking-widest opacity-70">
                         Avg: <span id="avg2-display">0.000</span>
                     </div>
                 </div>
 
-                <div class="p-4 flex gap-4 mt-auto bg-black/40 backdrop-blur-md border-t border-white/10">
+                <div class="p-4 flex gap-4 mt-auto bg-black/40 backdrop-blur-md border-t border-white/10 shrink-0">
                     <button id="add-point-2" class="flex-1 bg-gradient-to-b from-green-500 to-green-700 hover:from-green-400 hover:to-green-600 text-white font-black h-32 rounded-2xl text-4xl shadow-xl active:scale-95 transition-transform flex items-center justify-center border-t border-green-400">+1</button>
-                    <button id="undo-point-2" class="w-36 bg-gradient-to-b from-gray-600 to-gray-800 hover:from-gray-500 hover:to-gray-700 text-white font-black rounded-2xl text-5xl shadow-xl active:scale-95 transition-transform h-32 flex items-center justify-center border-t border-gray-500">↩</button>
+                    <button id="undo-point-2" class="w-32 bg-gradient-to-b from-gray-600 to-gray-800 hover:from-gray-500 hover:to-gray-700 text-white font-black rounded-2xl text-5xl shadow-xl active:scale-95 transition-transform h-32 flex items-center justify-center border-t border-gray-500">↩</button>
                 </div>
             </div>
 
@@ -253,18 +255,15 @@
             lastTouchEnd = now;
         }, false);
 
-        // --- FUNCION FIT TEXT MEJORADA (Se ejecuta SOLO al inicio o al escribir) ---
+        // --- FUNCION FIT TEXT MEJORADA ---
         function fitText(element) {
             if (!element) return;
-            
-            // 1. Reseteamos a un tamaño grande base
-            let fontSize = 4; // rem start size
+            // Restablecer a grande para medir el desbordamiento real
+            let fontSize = 3.5; 
             element.style.fontSize = fontSize + 'rem';
+            const minSize = 1.0; 
             
-            // 2. Reducir mientras haya overflow (scrollWidth > clientWidth)
-            const minSize = 1; // 1rem min size
-            
-            // Loop de reducción
+            // Reducir hasta que quepa (scrollWidth > clientWidth)
             while ( (element.scrollWidth > element.clientWidth) && (fontSize > minSize) ) {
                 fontSize -= 0.1;
                 element.style.fontSize = fontSize + 'rem';
@@ -299,6 +298,20 @@
                 });
             };
             populateCountrySelects();
+
+            // Toggle P2 Setup Logic
+            const numPlayersSelect = document.getElementById('num-players');
+            const p2SetupContainer = document.getElementById('player2-setup-container');
+            
+            function toggleP2Setup() {
+                if(numPlayersSelect.value === '1') {
+                    p2SetupContainer.classList.add('hidden');
+                } else {
+                    p2SetupContainer.classList.remove('hidden');
+                }
+            }
+            numPlayersSelect.addEventListener('change', toggleP2Setup);
+            toggleP2Setup(); // Run on init
 
             let state = {
                 score1: 0, score2: 0, inningScore1: 0, inningScore2: 0, innings: 0, currentPlayer: 1, 
@@ -399,6 +412,8 @@
             function updateUI() {
                 if(document.activeElement !== els.p1Name) els.p1Name.value = document.getElementById('player1-setup-name').value;
                 if(document.activeElement !== els.p2Name) els.p2Name.value = document.getElementById('player2-setup-name').value;
+
+                // NOTA: fitText() eliminado de aquí para evitar "baile"
 
                 els.p1Flag.src = getFlagUrl(state.player1Flag);
                 els.p2Flag.src = getFlagUrl(state.player2Flag);
@@ -522,7 +537,7 @@
                 els.setup.classList.add('hidden'); els.app.classList.remove('hidden');
                 if(audioCtx.state === 'suspended') audioCtx.resume();
                 
-                // Ejecutar fitText AQUI cuando el DOM ya es visible
+                // Ejecutar ajuste de texto inicial
                 fitText(els.p1Name); fitText(els.p2Name);
 
                 state.startTime = Date.now();
@@ -537,9 +552,10 @@
             document.getElementById('init-timer-btn').onclick = resetShot;
             document.getElementById('finish-game-btn').onclick = () => finishGame("Finalizado Manualmente");
             
-            // Listeners para escribir y ajustar texto
+            // Listeners para auto-ajuste al escribir
             els.p1Name.addEventListener('input', () => fitText(els.p1Name));
             els.p2Name.addEventListener('input', () => fitText(els.p2Name));
+            window.addEventListener('resize', () => { fitText(els.p1Name); fitText(els.p2Name); });
 
             document.getElementById('undo-point-1').onclick = () => {
                if(state.score1>0 && state.inningScore1>0) {
