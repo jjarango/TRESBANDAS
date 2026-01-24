@@ -15,7 +15,6 @@
         /* Estilo personalizado para la fuente Inter */
         body {
             font-family: 'Inter', sans-serif;
-            /* Bloqueo de gestos táctiles y selección */
             touch-action: manipulation;
             -webkit-user-select: none;
             -moz-user-select: none;
@@ -100,6 +99,14 @@
         .segment-alarm {
             animation: flash-red 0.5s infinite;
         }
+        
+        /* Estilo para imágenes de banderas */
+        .flag-icon {
+            display: inline-block;
+            vertical-align: middle;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
     </style>
 </head>
 <body class="bg-gray-900 text-white min-h-screen flex flex-col items-center p-2 sm:p-4 fixed w-full h-full inset-0"> 
@@ -123,14 +130,21 @@
                 </select>
             </div>
 
-            <div class="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                    <label for="player1-setup-name" class="block text-gray-300 text-sm font-semibold mb-1">Nombre J1:</label>
-                    <input type="text" id="player1-setup-name" value="Jugador 1" class="w-full p-2 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400">
+            <div class="mb-4">
+                <label for="player1-setup-name" class="block text-gray-300 text-sm font-semibold mb-1">Jugador 1:</label>
+                <div class="flex gap-2">
+                    <input type="text" id="player1-setup-name" value="Jugador 1" class="flex-1 p-2 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400">
+                    <select id="player1-country" class="w-32 p-2 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400 text-sm">
+                        </select>
                 </div>
-                <div id="player2-setup-container">
-                    <label for="player2-setup-name" class="block text-gray-300 text-sm font-semibold mb-1">Nombre J2:</label>
-                    <input type="text" id="player2-setup-name" value="Jugador 2" class="w-full p-2 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400">
+            </div>
+
+            <div id="player2-setup-container" class="mb-4">
+                <label for="player2-setup-name" class="block text-gray-300 text-sm font-semibold mb-1">Jugador 2:</label>
+                <div class="flex gap-2">
+                    <input type="text" id="player2-setup-name" value="Jugador 2" class="flex-1 p-2 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400">
+                    <select id="player2-country" class="w-32 p-2 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-400 text-sm">
+                        </select>
                 </div>
             </div>
 
@@ -192,8 +206,10 @@
 
         <div class="bg-gray-700/50 p-3 sm:p-4 text-center text-xl sm:text-2xl border-b border-gray-700 shrink-0">
             <div class="flex flex-col md:flex-row justify-between items-center md:space-x-4">
-                <div class="w-full md:w-2/5 text-center md:text-left mb-2 md:mb-0">
-                    <span id="summary-name1" class="font-bold text-yellow-400">Jugador 1</span>: 
+                <div class="w-full md:w-2/5 text-center md:text-left mb-2 md:mb-0 flex items-center justify-center md:justify-start gap-2">
+                    <span id="summary-name1" class="font-bold text-yellow-400">Jugador 1</span> 
+                    <img id="summary-flag1" src="" class="flag-icon h-5 w-auto" alt="J1">
+                    <span>:</span>
                     <span id="summary-score1" class="font-bold text-white">0</span>
                     (<span id="summary-avg1" class="text-gray-300 text-lg sm:text-xl">0.000</span>)
                 </div>
@@ -202,8 +218,10 @@
                     Entrada: <span id="summary-innings">1</span>
                 </div>
 
-                <div id="summary-player2" class="w-full md:w-2/5 text-center md:text-right">
-                    <span id="summary-name2" class="font-bold text-yellow-400">Jugador 2</span>: 
+                <div id="summary-player2" class="w-full md:w-2/5 text-center md:text-right flex items-center justify-center md:justify-end gap-2">
+                    <span id="summary-name2" class="font-bold text-yellow-400">Jugador 2</span>
+                    <img id="summary-flag2" src="" class="flag-icon h-5 w-auto" alt="J2">
+                    <span>:</span> 
                     <span id="summary-score2" class="font-bold text-white">0</span>
                     (<span id="summary-avg2" class="text-gray-300 text-lg sm:text-xl">0.000</span>)
                 </div>
@@ -219,7 +237,10 @@
                     <span id="total-score-box-1" class="text-3xl sm:text-5xl font-black text-white leading-none mt-1">0</span>
                 </div>
 
-                <input type="text" id="player1-name" value="Jugador 1" class="text-2xl sm:text-3xl font-bold bg-transparent text-white text-center rounded p-2 w-full focus:outline-none focus:ring-2 focus:ring-yellow-400 mb-3 sm:mb-4 pr-24 sm:pr-32">
+                <div class="flex items-center justify-center w-full mb-3 sm:mb-4 pr-24 sm:pr-32 gap-3">
+                    <input type="text" id="player1-name" value="Jugador 1" class="text-2xl sm:text-3xl font-bold bg-transparent text-white text-right rounded p-2 focus:outline-none focus:ring-2 focus:ring-yellow-400 w-full">
+                    <img id="player1-flag-display" src="" class="flag-icon h-8 w-auto border border-gray-500" alt="Flag">
+                </div>
                 
                 <div id="score1-display" class="text-score font-black text-yellow-400 my-4 sm:my-8 cursor-pointer relative select-none touch-manipulation" title="Clic para sumar 1 punto">
                     0
@@ -247,7 +268,10 @@
                     <span id="total-score-box-2" class="text-3xl sm:text-5xl font-black text-white leading-none mt-1">0</span>
                 </div>
 
-                <input type="text" id="player2-name" value="Jugador 2" class="text-2xl sm:text-3xl font-bold bg-transparent text-white text-center rounded p-2 w-full focus:outline-none focus:ring-2 focus:ring-yellow-400 mb-3 sm:mb-4 pr-24 sm:pr-32">
+                <div class="flex items-center justify-center w-full mb-3 sm:mb-4 pr-24 sm:pr-32 gap-3">
+                    <input type="text" id="player2-name" value="Jugador 2" class="text-2xl sm:text-3xl font-bold bg-transparent text-white text-right rounded p-2 focus:outline-none focus:ring-2 focus:ring-yellow-400 w-full">
+                    <img id="player2-flag-display" src="" class="flag-icon h-8 w-auto border border-gray-500" alt="Flag">
+                </div>
                 
                 <div id="score2-display" class="text-score font-black text-yellow-400 my-4 sm:my-8 cursor-pointer relative select-none touch-manipulation" title="Clic para sumar 1 punto">
                     0
@@ -326,13 +350,74 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             
+            // --- LISTA DE PAÍSES (Nombre y Código ISO) ---
+            const countries = [
+                { name: "Alemania", code: "de" },
+                { name: "Argentina", code: "ar" },
+                { name: "Austria", code: "at" },
+                { name: "Bélgica", code: "be" },
+                { name: "Bolivia", code: "bo" },
+                { name: "Brasil", code: "br" },
+                { name: "Canadá", code: "ca" },
+                { name: "Chile", code: "cl" },
+                { name: "China", code: "cn" },
+                { name: "Colombia", code: "co" },
+                { name: "Corea del Sur", code: "kr" },
+                { name: "Costa Rica", code: "cr" },
+                { name: "Dinamarca", code: "dk" },
+                { name: "Ecuador", code: "ec" },
+                { name: "Egipto", code: "eg" },
+                { name: "España", code: "es" },
+                { name: "Estados Unidos", code: "us" },
+                { name: "Filipinas", code: "ph" },
+                { name: "Francia", code: "fr" },
+                { name: "Gran Bretaña", code: "gb" },
+                { name: "Grecia", code: "gr" },
+                { name: "Holanda", code: "nl" },
+                { name: "Italia", code: "it" },
+                { name: "Japón", code: "jp" },
+                { name: "México", code: "mx" },
+                { name: "Nicaragua", code: "ni" },
+                { name: "Panamá", code: "pa" },
+                { name: "Paraguay", code: "py" },
+                { name: "Perú", code: "pe" },
+                { name: "Portugal", code: "pt" },
+                { name: "Suecia", code: "se" },
+                { name: "Suiza", code: "ch" },
+                { name: "Turquía", code: "tr" },
+                { name: "Uruguay", code: "uy" },
+                { name: "Venezuela", code: "ve" },
+                { name: "Vietnam", code: "vn" },
+                { name: "Mundo / Otro", code: "un" } // UN flag for World
+            ];
+
+            // Función para poblar los selectores
+            function populateCountrySelects() {
+                const selects = ['player1-country', 'player2-country'];
+                selects.forEach((id, index) => {
+                    const select = document.getElementById(id);
+                    countries.forEach(country => {
+                        const option = document.createElement('option');
+                        option.value = country.code;
+                        option.textContent = country.name;
+                        
+                        // Seleccionar por defecto: Colombia para J1, USA para J2
+                        if (index === 0 && country.code === "co") option.selected = true;
+                        if (index === 1 && country.code === "us") option.selected = true;
+                        
+                        select.appendChild(option);
+                    });
+                });
+            }
+            populateCountrySelects();
+
             // --- ESTADO DEL JUEGO ---
             let state = {
                 score1: 0, 
                 score2: 0, 
                 inningScore1: 0, 
                 inningScore2: 0, 
-                innings: 0, // Cuenta las veces que J2 completó turno
+                innings: 0, 
                 currentPlayer: 1, 
                 startTime: null,
                 timerInterval: null, 
@@ -343,16 +428,17 @@
                 targetScore: 40,
                 targetInnings: 50,
                 
+                // BANDERAS (Códigos ISO)
+                player1Flag: "co",
+                player2Flag: "us",
+
                 // NUEVAS ESTADÍSTICAS
                 highRun1: 0,
                 highRun2: 0,
                 zeros1: 0,
                 zeros2: 0,
 
-                // Configuración de Timer
                 regulatoryTimer: true, 
-
-                // --- ESTADO DEL SHOT CLOCK ---
                 shotClockTime: 0,      
                 shotClockInterval: null
             };
@@ -391,6 +477,9 @@
             
             const player1SetupName = document.getElementById('player1-setup-name');
             const player2SetupName = document.getElementById('player2-setup-name');
+            const player1CountrySelect = document.getElementById('player1-country');
+            const player2CountrySelect = document.getElementById('player2-country');
+
             const player2SetupContainer = document.getElementById('player2-setup-container');
             const startGameBtn = document.getElementById('start-game-btn');
             
@@ -408,18 +497,21 @@
             const panel2 = document.getElementById('player2-panel');
             const player1NameInput = document.getElementById('player1-name');
             const player2NameInput = document.getElementById('player2-name');
+            
+            // Elementos de Banderas (Imágenes)
+            const player1FlagDisplay = document.getElementById('player1-flag-display');
+            const player2FlagDisplay = document.getElementById('player2-flag-display');
+            const summaryFlag1 = document.getElementById('summary-flag1');
+            const summaryFlag2 = document.getElementById('summary-flag2');
 
             const totalScoreBox1 = document.getElementById('total-score-box-1');
             const totalScoreBox2 = document.getElementById('total-score-box-2');
 
             const timerDisplay = document.getElementById('timer-display');
-            
-            // Shot Clock Elements
             const shotClockNumber = document.getElementById('shot-clock-number');
             const shotClockBarsContainer = document.getElementById('shot-clock-bars');
             const initTimerBtn = document.getElementById('init-timer-btn');
 
-            // Resumen global
             const summaryScore1 = document.getElementById('summary-score1');
             const summaryScore2 = document.getElementById('summary-score2');
             const summaryAvg1 = document.getElementById('summary-avg1');
@@ -429,7 +521,6 @@
             const summaryName2 = document.getElementById('summary-name2');
             const summaryPlayer2 = document.getElementById('summary-player2');
 
-            // Botones
             const addPoint1Btn = document.getElementById('add-point-1');
             const addPoint2Btn = document.getElementById('add-point-2');
             const undoPoint1Btn = document.getElementById('undo-point-1');
@@ -440,7 +531,6 @@
             const finishGameBtn = document.getElementById('finish-game-btn');
             const pauseTimerBtn = document.getElementById('pause-timer-btn');
  
-            // Modal
             const modal = document.getElementById('confirmation-modal');
             const modalTitle = document.getElementById('modal-title');
             const modalMessage = document.getElementById('modal-message');
@@ -461,7 +551,6 @@
             }
             initShotClockUI();
 
-            // --- FUNCIONES DEL SHOT CLOCK ---
             function clearShotClock() {
                 if (state.shotClockInterval) clearInterval(state.shotClockInterval);
                 state.shotClockTime = 0;
@@ -540,6 +629,10 @@
 
             // --- FUNCIONES PRINCIPALES ---
 
+            function getFlagUrl(code) {
+                return `https://flagcdn.com/w80/${code}.png`;
+            }
+
             function formatTime(seconds) {
                 const h = String(Math.floor(seconds / 3600)).padStart(2, '0');
                 const m = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
@@ -605,6 +698,12 @@
                 player1NameInput.value = player1SetupName.value;
                 totalScoreBox1.textContent = state.score1;
                 
+                // ACTUALIZAR IMÁGENES DE BANDERAS
+                player1FlagDisplay.src = getFlagUrl(state.player1Flag);
+                player2FlagDisplay.src = getFlagUrl(state.player2Flag);
+                summaryFlag1.src = getFlagUrl(state.player1Flag);
+                summaryFlag2.src = getFlagUrl(state.player2Flag);
+
                 if (state.numPlayers === 2) {
                     score2Display.textContent = state.inningScore2;
                     player2NameInput.value = player2SetupName.value;
@@ -613,33 +712,24 @@
                 
                 updateTotalScoreColors();
 
-                // MOSTRAR LA ENTRADA ACTUAL (state.innings es las completadas)
                 let currentInningDisplay = state.innings + 1;
                 inningsDisplay.textContent = currentInningDisplay;
                 summaryInnings.textContent = currentInningDisplay;
 
-                // CÁLCULO DE PROMEDIO CORREGIDO
-                // El promedio visual siempre debe coincidir con el número que ve el usuario en "Entrada".
-                
-                // J1 siempre juega la entrada "currentInningDisplay"
+                // CÁLCULO DE PROMEDIO
                 let p1Divisor = currentInningDisplay;
-
                 let p2Divisor;
                 if (state.numPlayers === 1) {
                     p2Divisor = 1; 
                 } else {
-                    // En 2 jugadores:
-                    // Si es turno de J2, J2 está jugando la entrada actual (Mismo número que ve en pantalla)
-                    // Si es turno de J1, J2 completó la entrada anterior.
                     if (state.currentPlayer === 2) {
                         p2Divisor = currentInningDisplay;
                     } else {
-                        // J2 aún no juega la entrada actual, su promedio se basa en las completadas
                         p2Divisor = state.innings;
                     }
                 }
                 
-                if (p2Divisor === 0) p2Divisor = 1; // Evitar división por cero inicial para J2
+                if (p2Divisor === 0) p2Divisor = 1; 
 
                 avg1Display.textContent = calculateAvg(state.score1, p1Divisor);
                 
@@ -647,7 +737,6 @@
                     avg2Display.textContent = calculateAvg(state.score2, p2Divisor);
                 }
                 
-                // --- Actualización de Resumen ---
                 summaryScore1.textContent = state.score1;
                 summaryAvg1.textContent = calculateAvg(state.score1, p1Divisor);
                 
@@ -660,7 +749,6 @@
                     summaryPlayer2.classList.add('hidden'); 
                 }
 
-                // --- Gestión de Paneles Activos ---
                 panel1.classList.remove('player-active', 'border-yellow-400', 'player-active-bg');
                 panel2.classList.remove('player-active', 'border-yellow-400', 'player-active-bg');
                 panel1.classList.add('bg-gray-700/50');
@@ -725,7 +813,6 @@
                 modalCancelBtn.textContent = 'Cancelar';
             }
 
-            // Función centralizada para terminar la partida
             function executeFinishGame(finishReason = "") {
                  if (!state.isPaused && state.startTime) {
                     state.isPaused = true;
@@ -746,26 +833,18 @@
                 
                 const durationFormatted = formatTime(durationSeconds);
                 
-                // CÁLCULO FINAL DE PROMEDIOS PARA EL REPORTE
-                // Usamos la misma lógica que el display:
-                // Si terminamos porque J2 completó las entradas, ambos jugaron "state.innings" (50)
-                // Si terminamos por carambolas en medio de una entrada, usamos el contador actual.
-                
                 let p1Divisor, p2Divisor;
 
                 if (state.targetInnings > 0 && state.innings >= state.targetInnings) {
-                    // Límite de entradas alcanzado (J2 cerró)
                     p1Divisor = state.innings;
                     p2Divisor = state.innings;
                 } else {
-                    // Fin por carambolas o botón Terminar
                     p1Divisor = state.innings + (state.currentPlayer === 1 ? 1 : 0);
-                    if(state.currentPlayer === 2) p1Divisor = state.innings + 1; // Si es turno J2, J1 ya jugó esa entrada
+                    if(state.currentPlayer === 2) p1Divisor = state.innings + 1; 
 
                     p2Divisor = state.innings + (state.currentPlayer === 2 ? 1 : 0);
                 }
                 
-                // Corrección mínima por si acaso
                 if (p1Divisor === 0) p1Divisor = 1;
                 if (p2Divisor === 0) p2Divisor = 1;
 
@@ -774,13 +853,20 @@
 
                 let reasonHtml = finishReason ? `<div class="bg-blue-900/50 p-2 rounded mb-3 border border-blue-500 text-center font-bold text-blue-200">${finishReason}</div>` : '';
 
+                // Banderas para el modal final
+                const f1 = getFlagUrl(state.player1Flag);
+                const f2 = getFlagUrl(state.player2Flag);
+
                 let resultsHtml = `
                     <h4 class="text-xl font-bold text-yellow-400 mb-4">Resultados de la Partida:</h4>
                     ${reasonHtml}
                     <p><strong>Duración:</strong> ${durationFormatted}</p>
                     <p><strong>Entradas Totales:</strong> ${Math.max(p1Divisor, p2Divisor)}</p>
                     <hr class="my-3 border-gray-600">
-                    <p class="text-lg text-yellow-300 mb-1"><strong>${player1NameInput.value}:</strong></p>
+                    <p class="text-lg text-yellow-300 mb-1 flex items-center gap-2">
+                        <strong>${player1NameInput.value}</strong> 
+                        <img src="${f1}" class="h-4 w-auto inline">
+                    </p>
                     <ul class="list-disc list-inside pl-2 space-y-1">
                         <li>Carambolas: <strong>${state.score1}</strong></li>
                         <li>Promedio: ${finalAvg1}</li>
@@ -792,7 +878,10 @@
                 if (state.numPlayers === 2) {
                     resultsHtml += `
                         <hr class="my-3 border-gray-600">
-                        <p class="text-lg text-yellow-300 mb-1"><strong>${player2NameInput.value}:</strong></p>
+                        <p class="text-lg text-yellow-300 mb-1 flex items-center gap-2">
+                            <strong>${player2NameInput.value}</strong>
+                            <img src="${f2}" class="h-4 w-auto inline">
+                        </p>
                         <ul class="list-disc list-inside pl-2 space-y-1">
                             <li>Carambolas: <strong>${state.score2}</strong></li>
                             <li>Promedio: ${finalAvg2}</li>
@@ -823,6 +912,9 @@
                 state.targetInnings = parseInt(setupTargetInnings.value) || 0;
                 
                 state.regulatoryTimer = (regulatoryTimerSelect.value === 'yes');
+                
+                state.player1Flag = player1CountrySelect.value;
+                state.player2Flag = player2CountrySelect.value;
 
                 distanciaInput.value = state.targetScore > 0 ? state.targetScore : '';
                 
@@ -863,18 +955,14 @@
                 state.inningScore1++; 
                 state.currentPlayer = 1;
                 
-                // Actualizar Serie Mayor J1
                 if (state.inningScore1 > state.highRun1) {
                     state.highRun1 = state.inningScore1;
                 }
 
-                // CORRECCIÓN: Eliminado el incremento de entradas aquí
                 startTimer();
                 updateDisplay();
 
-                // AUTO-FINISH: Meta de Carambolas
                 if (state.targetScore > 0 && state.score1 >= state.targetScore) {
-                     // Pequeño delay para que se vea el punto antes del modal
                      setTimeout(() => executeFinishGame("¡Meta de carambolas alcanzada!"), 100);
                 }
             }
@@ -888,16 +976,13 @@
                 state.inningScore2++; 
                 state.currentPlayer = 2;
 
-                // Actualizar Serie Mayor J2
                 if (state.inningScore2 > state.highRun2) {
                     state.highRun2 = state.inningScore2;
                 }
 
-                // CORRECCIÓN: Eliminado el incremento de entradas aquí
                 startTimer();
                 updateDisplay();
 
-                // AUTO-FINISH: Meta de Carambolas
                 if (state.targetScore > 0 && state.score2 >= state.targetScore) {
                      setTimeout(() => executeFinishGame("¡Meta de carambolas alcanzada!"), 100);
                 }
@@ -910,8 +995,6 @@
                     saveState();
                     state.score1--;
                     state.inningScore1--;
-                    // Nota: No bajamos highRun aquí porque el estado anterior (historial) se encargará si hacemos undo completo,
-                    // y si solo bajamos punto actual, la serie mayor histórica se mantiene.
                     updateDisplay();
                 }
             });
@@ -926,11 +1009,10 @@
                 }
             });
 
-            // --- CAMBIO DE TURNO (LÓGICA DE ZEROS Y AUTO-FINISH ENTRADAS) ---
+            // --- CAMBIO DE TURNO ---
             nextInningBtn.addEventListener('click', () => {
                 saveState();
                 
-                // Verificar ceros del jugador que TERMINA su turno
                 if (state.currentPlayer === 1) {
                     if (state.inningScore1 === 0) state.zeros1++;
                 } else {
@@ -946,19 +1028,15 @@
                     if (state.currentPlayer === 1) {
                         state.currentPlayer = 2; 
                     } else {
-                        // J2 terminó su turno, se completa la entrada
                         state.currentPlayer = 1; 
                         state.innings++; 
                     }
                 }
-                // CORRECCIÓN: Eliminada la línea que forzaba state.innings = 1 si era 0
                 
                 startTimer();
                 resetShotClock(); 
                 updateDisplay();
 
-                // AUTO-FINISH: Límite de Entradas
-                // Verificamos si se alcanzó el límite.
                 if (state.targetInnings > 0 && state.innings >= state.targetInnings) {
                     setTimeout(() => executeFinishGame("Límite de entradas alcanzado"), 100);
                 }
@@ -976,7 +1054,6 @@
                     state.innings = lastState.innings;
                     state.currentPlayer = lastState.currentPlayer;
                     
-                    // Restaurar estadísticas nuevas
                     state.highRun1 = lastState.highRun1;
                     state.highRun2 = lastState.highRun2;
                     state.zeros1 = lastState.zeros1;
@@ -1050,7 +1127,9 @@
                     shotClockTime: 0,
                     shotClockInterval: null,
                     
-                    // Reset stats
+                    player1Flag: state.player1Flag,
+                    player2Flag: state.player2Flag,
+
                     highRun1: 0,
                     highRun2: 0,
                     zeros1: 0,
