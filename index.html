@@ -1,818 +1,670 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Asistente LKL / Base 50 para billar a 3 bandas</title>
-  <style>
-    :root{
-      --bg:#111318;
-      --panel:#1b1f28;
-      --panel2:#232936;
-      --ink:#f4f2e8;
-      --muted:#b8b2a3;
-      --line:#d6b26d;
-      --line2:#62d7ff;
-      --warn:#ffbd59;
-      --bad:#ff6b6b;
-      --good:#75e39c;
-      --felt:#17643a;
-      --felt2:#0f4a2b;
-      --rail:#5c321d;
-      --rail2:#8b5a2b;
-      --white:#f8f4e6;
-      --yellow:#ffd23f;
-      --red:#db3832;
-      --shadow: 0 20px 50px rgba(0,0,0,.35);
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background:radial-gradient(circle at 20% 0%, #252a35, #101217 55%);
-      color:var(--ink);
-    }
-    header{
-      padding:18px 22px 8px;
-      display:flex;
-      align-items:flex-end;
-      justify-content:space-between;
-      gap:16px;
-    }
-    h1{font-size:clamp(20px,2.4vw,34px); margin:0; letter-spacing:-.02em}
-    .subtitle{color:var(--muted); font-size:14px; margin-top:5px; max-width:880px; line-height:1.35}
-    .app{
-      display:grid;
-      grid-template-columns:minmax(520px, 1fr) 390px;
-      gap:18px;
-      padding:12px 22px 22px;
-      min-height:calc(100vh - 94px);
-    }
-    .stage, .panel{
-      background:linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.015));
-      border:1px solid rgba(255,255,255,.09);
-      border-radius:22px;
-      box-shadow:var(--shadow);
-      overflow:hidden;
-    }
-    .stage{display:flex; flex-direction:column; min-height:540px}
-    .canvasWrap{position:relative; flex:1; min-height:520px; touch-action:none}
-    .canvasWrap:fullscreen{width:100vw; height:100vh; min-height:100vh; background:#101217}
-    .canvasWrap.pseudoFull{position:fixed; inset:0; z-index:9999; width:100vw; height:100vh; min-height:100vh; background:#101217}
-    canvas{width:100%; height:100%; display:block; cursor:grab; touch-action:none}
-    .fsButton{
-      position:absolute;
-      left:0;
-      top:0;
-      z-index:8;
-      width:84px;
-      height:64px;
-      border-radius:20px;
-      border:2px solid rgba(255,255,255,.75);
-      background:linear-gradient(180deg,#178bff,#075fc4);
-      color:white;
-      font-size:26px;
-      font-weight:900;
-      letter-spacing:.03em;
-      box-shadow:0 14px 34px rgba(0,0,0,.42), 0 0 0 4px rgba(23,139,255,.20);
-      touch-action:none;
-      user-select:none;
-    }
-    .fsButton:hover{filter:brightness(1.08)}
-    canvas:active{cursor:grabbing}
-    .legend{
-      display:flex;
-      gap:12px;
-      flex-wrap:wrap;
-      padding:10px 16px 16px;
-      color:var(--muted);
-      font-size:13px;
-      border-top:1px solid rgba(255,255,255,.08);
-      background:rgba(0,0,0,.18);
-    }
-    .dot{width:10px; height:10px; border-radius:50%; display:inline-block; margin-right:6px; vertical-align:-1px}
-    .panel{padding:16px; overflow:auto; max-height:calc(100vh - 116px)}
-    fieldset{border:1px solid rgba(255,255,255,.10); border-radius:16px; padding:12px; margin:0 0 14px; background:rgba(0,0,0,.12)}
-    legend{padding:0 6px; color:#f2d08d; font-weight:700; font-size:13px; letter-spacing:.02em}
-    label{display:block; font-size:13px; color:var(--muted); margin:10px 0 6px}
-    select, input[type="range"], button{
-      width:100%;
-    }
-    select, button{
-      border:1px solid rgba(255,255,255,.12);
-      background:var(--panel2);
-      color:var(--ink);
-      border-radius:12px;
-      padding:10px 11px;
-      font-size:14px;
-      outline:none;
-    }
-    select:focus, button:focus{border-color:#e5c27d; box-shadow:0 0 0 3px rgba(229,194,125,.14)}
-    input[type="range"]{accent-color:#e7bd6a}
-    .row{display:grid; grid-template-columns:1fr 1fr; gap:10px}
-    .triple{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px}
-    .value{float:right; color:#fff; font-variant-numeric:tabular-nums}
-    .btns{display:grid; grid-template-columns:1fr 1fr; gap:10px}
-    button{cursor:pointer; font-weight:700; background:linear-gradient(180deg,#354053,#252c3b)}
-    button.primary{background:linear-gradient(180deg,#d5a44d,#9b6827); color:#16110a}
-    button:hover{filter:brightness(1.08)}
-    #result{
-      border-radius:18px;
-      padding:14px;
-      background:linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.02));
-      border:1px solid rgba(255,255,255,.1);
-      line-height:1.35;
-      font-size:14px;
-    }
-    #result h2{font-size:18px; margin:0 0 10px; letter-spacing:-.01em}
-    #result p{margin:8px 0}
-    #result b{color:#fff}
-    .pill{
-      display:inline-block;
-      border-radius:999px;
-      padding:3px 8px;
-      background:rgba(255,255,255,.09);
-      color:#fff;
-      font-size:12px;
-      margin:2px 3px 2px 0;
-      white-space:nowrap;
-    }
-    .warn{color:var(--warn)}
-    .bad{color:var(--bad)}
-    .good{color:var(--good)}
-    .small{font-size:12px; color:var(--muted); line-height:1.35}
-    .mono{font-variant-numeric:tabular-nums; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace}
-    details{margin-top:12px}
-    summary{cursor:pointer; color:#f2d08d; font-weight:700; font-size:13px}
-    @media(max-width:980px){
-      header{display:block}
-      .app{grid-template-columns:1fr; padding:10px}
-      .stage{min-height:420px}
-      .canvasWrap{min-height:410px}
-      .panel{max-height:none}
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <title>Marcador de Billar (Logic Fixed)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            touch-action: manipulation;
+            -webkit-user-select: none;
+            user-select: none;
+            overscroll-behavior: none;
+            overflow: hidden;
+        }
+
+        /* Inputs */
+        input[type="text"], input[type="number"], select {
+            -webkit-user-select: text;
+            user-select: text;
+        }
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        /* Paneles */
+        .player-active {
+            box-shadow: inset 0 0 0 8px #FACC15;
+        }
+        .player-active-bg {
+            background-color: #991b1b;
+        }
+        .player-inactive-bg {
+            background-color: #1f2937;
+        }
+
+        /* Texto Score Central */
+        .text-score {
+            font-size: 6rem; 
+            line-height: 1;
+        }
+        @media (min-width: 1024px) { .text-score { font-size: 7rem; } }
+
+        /* Reloj */
+        .shot-clock-bar-container { display: flex; height: 100%; width: 100%; gap: 2px; }
+        .clock-segment { flex: 1; height: 35px; background-color: #374151; border-radius: 2px; }
+        .segment-green { background-color: #22c55e; box-shadow: 0 0 4px #22c55e; }
+        .segment-orange { background-color: #f97316; box-shadow: 0 0 4px #f97316; }
+        .segment-red { background-color: #ef4444; box-shadow: 0 0 8px #ef4444; }
+        
+        /* Banderas */
+        .flag-icon {
+            display: block;
+            border-radius: 2px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        /* Input Nombre */
+        .player-name-input {
+            background: transparent;
+            color: white;
+            font-weight: 900;
+            border: none;
+            outline: none;
+            width: 100%;
+            padding: 0;
+            margin: 0;
+            line-height: 1.1;
+            white-space: nowrap;
+            overflow: hidden; 
+            text-overflow: clip; 
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        .player-name-input:focus { border-bottom: 2px solid #FACC15; }
+    </style>
 </head>
-<body>
-  <header>
-    <div>
-      <h1>Asistente LKL / Base 50 para billar a 3 bandas</h1>
-      <div class="subtitle">Arrastre las bolas, elija la secuencia y ajuste efecto/golpe. El cálculo combina geometría de diamantes con correcciones calibrables de efecto y velocidad. La salida es una recomendación práctica, no una garantía física.</div>
+<body class="bg-black text-white min-h-screen flex flex-col items-center p-2 fixed w-full h-full inset-0"> 
+
+<div id="setup-modal" class="fixed inset-0 bg-black/90 flex items-center justify-center z-50 overflow-y-auto">
+        <div class="bg-gray-900 border border-gray-700 p-8 rounded-2xl shadow-2xl max-w-md w-full">
+            <h3 class="text-3xl font-black mb-6 text-yellow-400 text-center uppercase tracking-wider">Configuración</h3>
+            
+            <div class="mb-5">
+                <label class="block text-gray-400 text-xs uppercase tracking-widest font-bold mb-2">Modo de Juego</label>
+                <select id="num-players" class="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-600 focus:border-yellow-400 focus:outline-none text-lg">
+                    <option value="1">1 Jugador (Práctica)</option>
+                    <option value="2" selected>2 Jugadores (Partida)</option>
+                </select>
+            </div>
+
+            <div class="mb-5">
+                <label class="block text-gray-400 text-xs uppercase tracking-widest font-bold mb-2">Reloj de Tiro</label>
+                <select id="regulatory-timer" class="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-600 focus:border-yellow-400 focus:outline-none text-lg">
+                    <option value="yes" selected>Reglamentario (40s)</option>
+                    <option value="no">Libre (Sin límite)</option>
+                </select>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-gray-400 text-xs uppercase tracking-widest font-bold mb-1">Jugador 1</label>
+                <div class="flex gap-2">
+                    <input type="text" id="player1-setup-name" maxlength="12" value="Jugador 1" class="flex-1 p-3 bg-gray-800 text-white rounded-lg border border-gray-600 focus:border-yellow-400 outline-none">
+                    <select id="player1-country" class="w-32 p-2 bg-gray-800 text-white rounded-lg border border-gray-600 text-sm text-center"></select>
+                </div>
+            </div>
+
+            <div id="player2-setup-container" class="mb-6">
+                <label class="block text-gray-400 text-xs uppercase tracking-widest font-bold mb-1">Jugador 2</label>
+                <div class="flex gap-2">
+                    <input type="text" id="player2-setup-name" maxlength="12" value="Jugador 2" class="flex-1 p-3 bg-gray-800 text-white rounded-lg border border-gray-600 focus:border-yellow-400 outline-none">
+                    <select id="player2-country" class="w-32 p-2 bg-gray-800 text-white rounded-lg border border-gray-600 text-sm text-center"></select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 mb-8">
+                <div>
+                    <label class="block text-yellow-500 text-xs uppercase tracking-widest font-bold mb-1 text-center">Meta Carambolas</label>
+                    <input type="number" id="setup-target-score" value="40" class="w-full p-3 bg-gray-800 text-white text-center font-black text-2xl rounded-lg border border-gray-600 focus:border-yellow-400 outline-none">
+                </div>
+                <div>
+                    <label class="block text-blue-400 text-xs uppercase tracking-widest font-bold mb-1 text-center">Límite Entradas</label>
+                    <input type="number" id="setup-target-innings" value="50" class="w-full p-3 bg-gray-800 text-white text-center font-black text-2xl rounded-lg border border-gray-600 focus:border-blue-400 outline-none">
+                </div>
+            </div>
+
+            <button id="start-game-btn" class="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-500 hover:to-green-600 text-white font-black py-4 px-6 rounded-xl text-xl shadow-lg transform transition active:scale-95 uppercase tracking-wide">
+                Iniciar Partida
+            </button>
+        </div>
     </div>
-  </header>
 
-  <main class="app">
-    <section class="stage">
-      <div class="canvasWrap" id="canvasWrap">
-        <canvas id="table"></canvas>
-        <button id="fsBtn" class="fsButton" type="button" aria-label="Pantalla completa">FS</button>
-      </div>
-      <div class="legend">
-        <span><i class="dot" style="background:var(--white)"></i>Blanca tacadora</span>
-        <span><i class="dot" style="background:var(--yellow)"></i>Amarilla</span>
-        <span><i class="dot" style="background:var(--red)"></i>Roja</span>
-        <span><i class="dot" style="background:var(--line2)"></i>Ruta base</span>
-        <span><i class="dot" style="background:var(--line)"></i>Ataque corregido</span>
-      </div>
-    </section>
+    <div id="app-content" class="w-full h-full flex flex-col hidden bg-gray-900">
+        
+        <header class="bg-black/60 p-2 shrink-0 border-b border-gray-800">
+            <div class="flex items-center justify-between gap-4 mb-1 px-2">
+                <div id="shot-clock-wrapper" class="flex-1 flex items-center gap-3 bg-black border border-gray-700 rounded-lg px-3 py-1 max-w-4xl mx-auto shadow-lg">
+                    <button id="init-timer-btn" style="background-color: #183b06;" class="w-10 h-10 flex items-center justify-center bg-gray-800 text-green-500 rounded font-bold hover:bg-gray-700 border border-gray-600 text-lg">I</button>
+                    <div id="shot-clock-number" class="text-5xl font-mono font-bold text-white w-20 text-center leading-none">40</div>
+                    <div id="shot-clock-bars" class="shot-clock-bar-container flex-1"></div>
+                </div>
+                <div class="hidden sm:block text-right">
+                    <div id="timer-display" class="text-2xl font-mono text-gray-400">00:00:00</div>
+                </div>
+            </div>
+            <div class="flex justify-between items-end px-6 text-gray-500 text-xs font-black uppercase tracking-widest">
+                <div>Meta: <span id="distancia-display" class="text-yellow-500 text-lg">40</span></div>
+                <div class="sm:hidden text-center"><span id="timer-display-mobile" class="font-mono text-white text-lg">00:00:00</span></div>
+                <div>Límite: <span id="limit-display" class="text-blue-500 text-lg">50</span></div>
+            </div>
+        </header>
 
-    <aside class="panel">
-      <fieldset>
-        <legend>1. Secuencia de la jugada</legend>
-        <label for="mode">Salida de la blanca</label>
-        <select id="mode">
-          <option value="ballFirst">Bola primero, luego bandas</option>
-          <option value="cushionFirst">Banda previa, luego bola</option>
-        </select>
-
-        <div class="row">
-          <div>
-            <label id="firstBallLabel" for="firstBall">Primera bola</label>
-            <select id="firstBall">
-              <option value="yellow">Amarilla</option>
-              <option value="red">Roja</option>
-            </select>
-          </div>
-          <div>
-            <label for="thirdRail">Tercera banda</label>
-            <select id="thirdRail">
-              <option value="auto">Automática</option>
-              <option value="none">Sin tercera</option>
-              <option value="top">Larga superior</option>
-              <option value="right">Corta derecha</option>
-              <option value="bottom">Larga inferior</option>
-              <option value="left">Corta izquierda</option>
-            </select>
-          </div>
+        <div class="bg-gray-800 border-b border-gray-700 p-2 shrink-0 flex items-center justify-center shadow-md z-20">
+            <div class="flex items-center gap-8">
+                <div class="text-center">
+                    <span class="block text-[10px] text-gray-400 font-bold uppercase tracking-widest">Completas</span>
+                    <span id="innings-completed-display" class="text-4xl font-black text-gray-400 leading-none">0</span>
+                </div>
+                <div class="h-10 w-px bg-gray-600"></div>
+                <div class="text-center">
+                    <span class="block text-[10px] text-yellow-500 font-bold uppercase tracking-widest">Actual</span>
+                    <span id="innings-current-display" class="text-5xl font-black text-white leading-none">1</span>
+                </div>
+            </div>
         </div>
 
-        <div class="row">
-          <div>
-            <label for="rail1">Primera banda</label>
-            <select id="rail1">
-              <option value="bottom">Larga inferior</option>
-              <option value="right">Corta derecha</option>
-              <option value="top">Larga superior</option>
-              <option value="left">Corta izquierda</option>
-            </select>
-          </div>
-          <div>
-            <label for="rail2">Segunda banda</label>
-            <select id="rail2">
-              <option value="right">Corta derecha</option>
-              <option value="top">Larga superior</option>
-              <option value="left">Corta izquierda</option>
-              <option value="bottom">Larga inferior</option>
-            </select>
-          </div>
+        <main class="flex flex-1 overflow-hidden relative">
+            
+            <div id="player1-panel" class="relative w-1/2 flex flex-col border-r-2 border-black transition-colors duration-300 player-inactive-bg">
+                
+                <div class="absolute top-6 left-6 z-10 flex flex-col items-start w-[55%]">
+                    <div class="w-full">
+                        <input type="text" id="player1-name" value="Jugador 1" readonly class="player-name-input text-left drop-shadow-md" spellcheck="false" style="font-size: 3.5rem;">
+                    </div>
+                    <img id="player1-flag-display" src="" class="flag-icon h-10 w-auto border border-white/30 mt-3" alt="Flag">
+                </div>
+
+                <div class="absolute top-24 right-6 z-10 bg-black/90 border-4 border-gray-600 rounded-2xl p-4 text-center min-w-[150px] shadow-2xl backdrop-blur-sm">
+                    <span class="block text-xs uppercase text-gray-400 font-bold tracking-[0.2em] mb-1">TOTAL</span>
+                    <span id="total-score-box-1" class="text-7xl sm:text-8xl lg:text-9xl font-black text-white leading-none block">0</span>
+                </div>
+
+                <div class="flex-1 flex flex-col items-center justify-end pb-8 cursor-pointer select-none touch-manipulation hover:bg-white/5 transition-colors" id="touch-area-1">
+                    <div id="score1-display" class="text-score font-black text-yellow-400 leading-none drop-shadow-2xl filter brightness-110">0</div>
+                    <div class="mt-2 text-gray-300 font-bold text-3xl tracking-widest opacity-80">
+                        Avg: <span id="avg1-display">0.000</span>
+                    </div>
+                </div>
+
+                <div class="p-2 flex gap-3 mt-auto bg-black/40 backdrop-blur-md border-t border-white/10 shrink-0 h-24 items-center">
+                    <button id="add-point-1" class="flex-1 bg-gradient-to-b from-green-500 to-green-700 hover:from-green-400 hover:to-green-600 text-white font-black h-full rounded-xl text-4xl shadow-xl active:scale-95 transition-transform flex items-center justify-center border-t border-green-400">+1</button>
+                    <button id="undo-point-1" class="w-28 bg-gradient-to-b from-gray-600 to-gray-800 hover:from-gray-500 hover:to-gray-700 text-white font-black rounded-xl text-4xl shadow-xl active:scale-95 transition-transform h-full flex items-center justify-center border-t border-gray-500">↩</button>
+                </div>
+            </div>
+            
+            <div id="player2-panel" class="relative w-1/2 flex flex-col transition-colors duration-300 player-inactive-bg">
+                
+                <div class="absolute top-6 left-6 z-10 flex flex-col items-start w-[55%]">
+                    <div class="w-full">
+                        <input type="text" id="player2-name" value="Jugador 2" readonly class="player-name-input text-left drop-shadow-md" spellcheck="false" style="font-size: 3.5rem;">
+                    </div>
+                    <img id="player2-flag-display" src="" class="flag-icon h-10 w-auto border border-white/30 mt-3" alt="Flag">
+                </div>
+
+                <div class="absolute top-24 right-6 z-10 bg-black/90 border-4 border-gray-600 rounded-2xl p-4 text-center min-w-[150px] shadow-2xl backdrop-blur-sm">
+                    <span class="block text-xs uppercase text-gray-400 font-bold tracking-[0.2em] mb-1">TOTAL</span>
+                    <span id="total-score-box-2" class="text-7xl sm:text-8xl lg:text-9xl font-black text-white leading-none block">0</span>
+                </div>
+
+                <div class="flex-1 flex flex-col items-center justify-end pb-8 cursor-pointer select-none touch-manipulation hover:bg-white/5 transition-colors" id="touch-area-2">
+                    <div id="score2-display" class="text-score font-black text-yellow-400 leading-none drop-shadow-2xl filter brightness-110">0</div>
+                    <div class="mt-2 text-gray-300 font-bold text-3xl tracking-widest opacity-80">
+                        Avg: <span id="avg2-display">0.000</span>
+                    </div>
+                </div>
+
+                <div class="p-2 flex gap-3 mt-auto bg-black/40 backdrop-blur-md border-t border-white/10 shrink-0 h-24 items-center">
+                    <button id="add-point-2" class="flex-1 bg-gradient-to-b from-green-500 to-green-700 hover:from-green-400 hover:to-green-600 text-white font-black h-full rounded-xl text-4xl shadow-xl active:scale-95 transition-transform flex items-center justify-center border-t border-green-400">+1</button>
+                    <button id="undo-point-2" class="w-28 bg-gradient-to-b from-gray-600 to-gray-800 hover:from-gray-500 hover:to-gray-700 text-white font-black rounded-xl text-4xl shadow-xl active:scale-95 transition-transform h-full flex items-center justify-center border-t border-gray-500">↩</button>
+                </div>
+            </div>
+
+        </main>
+
+        <footer class="bg-gray-950 p-3 shrink-0 border-t border-gray-800 flex gap-3 overflow-x-auto shadow-2xl z-30 h-40 items-center">
+            
+            <button id="next-inning-btn" class="flex-1 bg-gradient-to-b from-blue-600 to-blue-800 hover:from-blue-500 hover:to-blue-700 text-white font-black h-full px-4 rounded-2xl text-3xl shadow-xl active:scale-95 transition whitespace-nowrap flex flex-col items-center justify-center uppercase tracking-wide border-t-2 border-blue-400 leading-tight">
+                <span>CAMBIO</span>
+                <span class="text-2xl mt-1">TURNO / FALLO</span>
+            </button>
+            
+            <div class="flex gap-3 h-full">
+                <button id="undo-btn" class="bg-gradient-to-b from-gray-600 to-gray-800 hover:from-gray-500 hover:to-gray-700 text-white font-bold h-full px-6 rounded-2xl shadow-xl active:scale-95 transition flex flex-col items-center justify-center text-lg uppercase border-t-2 border-gray-500 w-28">
+                    <span class="text-4xl mb-1">↩</span>
+                    <span>Deshacer</span>
+                </button>
+                
+                <button id="pause-timer-btn" class="bg-gradient-to-b from-yellow-600 to-yellow-800 hover:from-yellow-500 hover:to-yellow-700 text-white font-bold h-full px-6 rounded-2xl shadow-xl active:scale-95 transition flex flex-col items-center justify-center text-lg uppercase border-t-2 border-yellow-500 w-28">
+                    <span class="text-4xl mb-1">⏸</span>
+                    <span>Pausa</span>
+                </button>
+                
+                <button id="finish-game-btn" class="bg-gradient-to-b from-purple-700 to-purple-900 hover:from-purple-600 hover:to-purple-800 text-white font-bold h-full px-6 rounded-2xl shadow-xl active:scale-95 transition flex flex-col items-center justify-center text-lg uppercase border-t-2 border-purple-500 w-28">
+                    <span class="text-4xl mb-1">🏁</span>
+                    <span>Fin</span>
+                </button>
+                
+                <button id="reset-btn" class="bg-gradient-to-b from-red-700 to-red-900 hover:from-red-600 hover:to-red-800 text-white font-bold h-full px-6 rounded-2xl shadow-xl active:scale-95 transition flex flex-col items-center justify-center text-lg uppercase border-t-2 border-red-500 w-28">
+                    <span class="text-4xl mb-1">✖</span>
+                    <span>Salir</span>
+                </button>
+            </div>
+        </footer>
+
+    </div>
+
+    <div id="confirmation-modal" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 hidden">
+        <div class="bg-gray-800 p-8 rounded-2xl shadow-2xl max-w-sm w-full border border-gray-600">
+            <h3 id="modal-title" class="text-2xl font-bold mb-4 text-white">Confirmación</h3>
+            <div id="modal-content" class="text-gray-300 mb-6"></div>
+            <div class="flex justify-end space-x-3">
+                <button id="modal-cancel-btn" class="px-5 py-3 rounded-xl bg-gray-600 hover:bg-gray-500 text-white font-bold text-lg">Cancelar</button>
+                <button id="modal-confirm-btn" class="px-5 py-3 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-lg">Confirmar</button>
+            </div>
         </div>
-      </fieldset>
+    </div>
 
-      <fieldset>
-        <legend>2. Efecto y golpe</legend>
-        <label for="english">Efecto</label>
-        <select id="english">
-          <option value="positive">Positivo: abre / alarga</option>
-          <option value="neutral">Sin efecto lateral</option>
-          <option value="negative">Negativo: cierra / acorta</option>
-        </select>
-        <label for="tips">Efecto lateral <span class="value" id="tipsVal">Efecto 2 = 1.0 punta = 12.0 mm</span></label>
-        <input id="tips" type="range" min="0" max="4" step="1" value="2" />
+    <script>
+        document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function (event) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) { }
+            lastTouchEnd = now;
+        }, false);
 
-        <label for="tipMm">Diámetro real de una punta <span class="value" id="tipMmVal">12.0 mm</span></label>
-        <input id="tipMm" type="range" min="8" max="14" step="0.5" value="12" />
+        // --- FUNCION FIT TEXT ---
+        function fitText(element) {
+            if (!element) return;
+            let fontSize = 3.5; 
+            element.style.fontSize = fontSize + 'rem';
+            const minSize = 1.0; 
+            while ( (element.scrollWidth > element.clientWidth) && (fontSize > minSize) ) {
+                fontSize -= 0.1;
+                element.style.fontSize = fontSize + 'rem';
+            }
+        }
 
-        <label for="stroke">Tipo de golpe</label>
-        <select id="stroke">
-          <option value="long">Penetrado largo</option>
-          <option value="short">Penetrado corto</option>
-          <option value="dry">Seco</option>
-        </select>
-      </fieldset>
+        document.addEventListener('DOMContentLoaded', () => {
+            const countries = [
+                { name: "Alemania", code: "de" }, { name: "Argentina", code: "ar" }, { name: "Austria", code: "at" }, { name: "Bélgica", code: "be" },
+                { name: "Bolivia", code: "bo" }, { name: "Brasil", code: "br" }, { name: "Canadá", code: "ca" }, { name: "Chile", code: "cl" },
+                { name: "China", code: "cn" }, { name: "Colombia", code: "co" }, { name: "Corea del Sur", code: "kr" }, { name: "Costa Rica", code: "cr" },
+                { name: "Dinamarca", code: "dk" }, { name: "Ecuador", code: "ec" }, { name: "Egipto", code: "eg" }, { name: "España", code: "es" },
+                { name: "Estados Unidos", code: "us" }, { name: "Filipinas", code: "ph" }, { name: "Francia", code: "fr" }, { name: "Gran Bretaña", code: "gb" },
+                { name: "Grecia", code: "gr" }, { name: "Holanda", code: "nl" }, { name: "Italia", code: "it" }, { name: "Japón", code: "jp" },
+                { name: "México", code: "mx" }, { name: "Nicaragua", code: "ni" }, { name: "Panamá", code: "pa" }, { name: "Paraguay", code: "py" },
+                { name: "Perú", code: "pe" }, { name: "Portugal", code: "pt" }, { name: "Suecia", code: "se" }, { name: "Suiza", code: "ch" },
+                { name: "Turquía", code: "tr" }, { name: "Uruguay", code: "uy" }, { name: "Venezuela", code: "ve" }, { name: "Vietnam", code: "vn" },
+                { name: "Mundo / Otro", code: "un" }
+            ];
 
-      <fieldset>
-        <legend>3. Calibración de mesa</legend>
-        <label for="effectGain">Corrección por punta de efecto <span class="value" id="effectGainVal">0.80 pts</span></label>
-        <input id="effectGain" type="range" min="0" max="2.5" step="0.05" value="0.80" />
+            const populateCountrySelects = () => {
+                ['player1-country', 'player2-country'].forEach((id, index) => {
+                    const select = document.getElementById(id);
+                    countries.forEach(country => {
+                        const option = document.createElement('option');
+                        option.value = country.code;
+                        option.textContent = country.name;
+                        if (index === 0 && country.code === "co") option.selected = true;
+                        if (index === 1 && country.code === "us") option.selected = true;
+                        select.appendChild(option);
+                    });
+                });
+            };
+            populateCountrySelects();
 
-        <label for="strokeGain">Corrección por golpe <span class="value" id="strokeGainVal">0.65 pts</span></label>
-        <input id="strokeGain" type="range" min="0" max="2.5" step="0.05" value="0.65" />
+            const numPlayersSelect = document.getElementById('num-players');
+            const p2SetupContainer = document.getElementById('player2-setup-container');
+            function toggleP2Setup() {
+                if(numPlayersSelect.value === '1') p2SetupContainer.classList.add('hidden');
+                else p2SetupContainer.classList.remove('hidden');
+            }
+            numPlayersSelect.addEventListener('change', toggleP2Setup);
+            toggleP2Setup(); 
 
-        <label for="clothBias">Sesgo del paño / bandas <span class="value" id="clothBiasVal">0.00 pts</span></label>
-        <input id="clothBias" type="range" min="-8" max="8" step="0.05" value="0" />
-        <p class="small">Use estos tres controles en la mesa real. La unidad de corrección es el punto LKL: 10 puntos equivalen a un diamante físico. Si la blanca queda sistemáticamente corta, aumente el sesgo hacia valores positivos; si queda larga, bájelo. Guarde mentalmente los valores que funcionen con su paño, sus bandas y su golpe.</p>
-      </fieldset>
+            let state = {
+                score1: 0, score2: 0, inningScore1: 0, inningScore2: 0, innings: 0, currentPlayer: 1, 
+                startTime: null, timerInterval: null, numPlayers: 2, regulatoryTimer: true, 
+                isPaused: false, pausedTime: 0, pauseStartTime: null, targetScore: 40, targetInnings: 50,
+                player1Flag: "co", player2Flag: "us", highRun1: 0, highRun2: 0, zeros1: 0, zeros2: 0,
+                shotClockTime: 0, shotClockInterval: null
+            };
+            let history = [];
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-      <div id="result"></div>
-      <details>
-        <summary>Notas importantes del modelo</summary>
-        <p class="small">El programa resuelve la ruta por reflexión geométrica de la mesa y luego desplaza el punto de ataque en puntos LKL según efecto, golpe y calibración. En tiros de bola primero, la cantidad de bola es una estimación basada en el ángulo que debe tomar la blanca después del primer impacto; no modela con precisión masa, fricción, throw, transferencia de efecto ni velocidad real.</p>
-        <p class="small">En el lenguaje de esta aplicación, efecto positivo significa que la ruta se abre o se alarga. Efecto negativo significa que se cierra o se acorta. No se define como izquierda/derecha absoluto, porque eso depende de la banda y del sentido de entrada.</p>
-      </details>
-      <div class="btns" style="margin-top:14px">
-        <button class="primary" id="recalc">Recalcular</button>
-        <button id="reset">Reiniciar bolas</button>
-      </div>
-    </aside>
-  </main>
+            const els = {
+                app: document.getElementById('app-content'), setup: document.getElementById('setup-modal'),
+                p1Name: document.getElementById('player1-name'), p2Name: document.getElementById('player2-name'),
+                p1Panel: document.getElementById('player1-panel'), p2Panel: document.getElementById('player2-panel'),
+                score1: document.getElementById('score1-display'), score2: document.getElementById('score2-display'),
+                total1: document.getElementById('total-score-box-1'), total2: document.getElementById('total-score-box-2'),
+                avg1: document.getElementById('avg1-display'), avg2: document.getElementById('avg2-display'),
+                inningsCompleted: document.getElementById('innings-completed-display'), 
+                inningsCurrent: document.getElementById('innings-current-display'),
+                timer: document.getElementById('timer-display'),
+                timerMobile: document.getElementById('timer-display-mobile'), shotNum: document.getElementById('shot-clock-number'),
+                shotBars: document.getElementById('shot-clock-bars'), p1Flag: document.getElementById('player1-flag-display'),
+                p2Flag: document.getElementById('player2-flag-display'), metaDist: document.getElementById('distancia-display'),
+                metaLimit: document.getElementById('limit-display')
+            };
 
-<script>
-(() => {
-  const canvas = document.getElementById('table');
-  const ctx = canvas.getContext('2d');
-  const ids = id => document.getElementById(id);
-  const canvasWrap = ids('canvasWrap');
-  const fsBtn = ids('fsBtn');
+            function getFlagUrl(code) { return `https://flagcdn.com/w80/${code}.png`; }
+            function formatTime(s) {
+                const h = String(Math.floor(s/3600)).padStart(2,'0'), m = String(Math.floor((s%3600)/60)).padStart(2,'0'), sec = String(s%60).padStart(2,'0');
+                return `${h}:${m}:${sec}`;
+            }
+            function calcAvg(s, i) { return i <= 0 ? '0.000' : (s/i).toFixed(3); }
+            function playAlarm() {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+                o.type = 'sawtooth'; o.frequency.setValueAtTime(440, audioCtx.currentTime);
+                o.frequency.exponentialRampToValueAtTime(110, audioCtx.currentTime + 0.5);
+                g.gain.setValueAtTime(0.5, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+                o.connect(g); g.connect(audioCtx.destination);
+                o.start(); o.stop(audioCtx.currentTime + 0.5);
+            }
 
-  const TABLE = { W:80, H:40 }; // Escala visual LKL: 10 puntos = 1 diamante físico. Mesa 2:1.
-  const BALL_R = 1.08;
-  const rails = ['top','right','bottom','left'];
-  const railNames = {
-    top:'larga superior', right:'corta derecha', bottom:'larga inferior', left:'corta izquierda'
-  };
-  const ballNames = { white:'blanca', yellow:'amarilla', red:'roja' };
-  const colors = { white:'#f8f4e6', yellow:'#ffd23f', red:'#db3832' };
+            els.shotBars.innerHTML = '';
+            for(let i=0; i<40; i++) {
+                const d = document.createElement('div'); d.className = 'clock-segment'; d.id = `seg-${i}`;
+                els.shotBars.appendChild(d);
+            }
 
-  let balls = {
-    white:{x:14.4, y:30.4},
-    yellow:{x:34.4, y:16},
-    red:{x:65.6, y:7.2}
-  };
-  const initialBalls = JSON.parse(JSON.stringify(balls));
-  let dragKey = null;
-  let geom = { scale:1, ox:0, oy:0, w:0, h:0, dpr:1 };
-  let lastShot = null;
+            function updateShotVisual(t) {
+                const isOver = t > 40;
+                const barIndex = t - 1;
+                if (isOver) {
+                    document.querySelectorAll('.clock-segment').forEach(b => {
+                        b.classList.remove('segment-green', 'segment-orange'); b.classList.add('segment-red');
+                    });
+                    return;
+                }
+                const bar = document.getElementById(`seg-${barIndex}`);
+                if (bar) {
+                    if (t <= 20) bar.classList.add('segment-green');
+                    else if (t <= 30) bar.classList.add('segment-orange');
+                    else bar.classList.add('segment-red');
+                }
+            }
 
-  function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
-  function dist(a,b){ return Math.hypot(a.x-b.x, a.y-b.y); }
-  function sub(a,b){ return {x:a.x-b.x, y:a.y-b.y}; }
-  function add(a,b){ return {x:a.x+b.x, y:a.y+b.y}; }
-  function mul(v,k){ return {x:v.x*k, y:v.y*k}; }
-  function len(v){ return Math.hypot(v.x,v.y); }
-  function norm(v){ const l=len(v)||1; return {x:v.x/l, y:v.y/l}; }
-  function dot(a,b){ return a.x*b.x+a.y*b.y; }
-  function cross(a,b){ return a.x*b.y-a.y*b.x; }
-  function signedAngle(a,b){ return Math.atan2(cross(a,b), dot(a,b)); }
-  function fmt(n,d=1){ return Number.isFinite(n) ? n.toFixed(d) : '—'; }
+            function runTimer() {
+                if (state.timerInterval) return;
+                state.timerInterval = setInterval(() => {
+                    if (state.isPaused) return;
+                    const e = Math.floor((Date.now() - state.startTime - state.pausedTime) / 1000);
+                    const txt = formatTime(e);
+                    els.timer.textContent = txt; els.timerMobile.textContent = txt;
+                }, 1000);
+            }
 
-  function resize(){
-    const rect = canvas.getBoundingClientRect();
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = Math.max(600, Math.floor(rect.width*dpr));
-    canvas.height = Math.max(360, Math.floor(rect.height*dpr));
-    ctx.setTransform(dpr,0,0,dpr,0,0);
-    geom.dpr = dpr;
-    geom.w = rect.width;
-    geom.h = rect.height;
-    const pad = Math.max(32, Math.min(rect.width, rect.height)*0.08);
-    geom.scale = Math.min((rect.width - pad*2)/TABLE.W, (rect.height - pad*2)/TABLE.H);
-    geom.ox = (rect.width - TABLE.W*geom.scale)/2;
-    geom.oy = (rect.height - TABLE.H*geom.scale)/2;
-    draw();
-    setTimeout(positionFsButton, 0);
-  }
-  new ResizeObserver(resize).observe(canvas.parentElement);
+            function runShotClock() {
+                clearInterval(state.shotClockInterval);
+                state.shotClockInterval = setInterval(() => {
+                    if (state.isPaused) return;
+                    state.shotClockTime++;
+                    if (state.regulatoryTimer) {
+                        els.shotNum.textContent = 40 - state.shotClockTime;
+                        if (state.shotClockTime >= 55) { playAlarm(); resetShot(); return; }
+                    } else {
+                        els.shotNum.textContent = state.shotClockTime;
+                    }
+                    updateShotVisual(state.shotClockTime);
+                }, 1000);
+            }
 
-  function worldToScreen(p){ return {x:geom.ox + p.x*geom.scale, y:geom.oy + p.y*geom.scale}; }
-  function screenToWorld(x,y){ return {x:(x-geom.ox)/geom.scale, y:(y-geom.oy)/geom.scale}; }
+            function resetShot() {
+                clearInterval(state.shotClockInterval);
+                state.shotClockTime = 0;
+                els.shotNum.textContent = state.regulatoryTimer ? "40" : "0";
+                document.querySelectorAll('.clock-segment').forEach(b => b.className = 'clock-segment');
+                runShotClock();
+            }
 
-  function reflectPoint(p, rail){
-    if(rail==='top') return {x:p.x, y:-p.y};
-    if(rail==='bottom') return {x:p.x, y:2*TABLE.H-p.y};
-    if(rail==='left') return {x:-p.x, y:p.y};
-    if(rail==='right') return {x:2*TABLE.W-p.x, y:p.y};
-    return {...p};
-  }
-  function reflectDir(v, rail){
-    if(rail==='top' || rail==='bottom') return {x:v.x, y:-v.y};
-    if(rail==='left' || rail==='right') return {x:-v.x, y:v.y};
-    return {...v};
-  }
+            function updateUI() {
+                if(document.activeElement !== els.p1Name) els.p1Name.value = document.getElementById('player1-setup-name').value;
+                if(document.activeElement !== els.p2Name) els.p2Name.value = document.getElementById('player2-setup-name').value;
 
-  function rayBoundary(p, d){
-    const EPS = 1e-8;
-    const hits = [];
-    if(d.x > EPS) hits.push({t:(TABLE.W-p.x)/d.x, rail:'right'});
-    if(d.x < -EPS) hits.push({t:(0-p.x)/d.x, rail:'left'});
-    if(d.y > EPS) hits.push({t:(TABLE.H-p.y)/d.y, rail:'bottom'});
-    if(d.y < -EPS) hits.push({t:(0-p.y)/d.y, rail:'top'});
-    let best = null;
-    for(const h of hits){
-      if(h.t <= 1e-6) continue;
-      const q = {x:p.x + d.x*h.t, y:p.y + d.y*h.t};
-      if(q.x < -1e-5 || q.x > TABLE.W+1e-5 || q.y < -1e-5 || q.y > TABLE.H+1e-5) continue;
-      if(!best || h.t < best.t){ best = {...h, point:{x:clamp(q.x,0,TABLE.W), y:clamp(q.y,0,TABLE.H)}}; }
-    }
-    return best;
-  }
+                els.p1Flag.src = getFlagUrl(state.player1Flag);
+                els.p2Flag.src = getFlagUrl(state.player2Flag);
 
-  function mirrorPath(start, target, seq){
-    let virtual = {...target};
-    for(let i=seq.length-1; i>=0; i--) virtual = reflectPoint(virtual, seq[i]);
-    const dir0 = norm(sub(virtual, start));
-    let p = {...start};
-    let dir = {...dir0};
-    const points = [{...start}];
-    const hitRails = [];
-    const mismatches = [];
-    let valid = true;
-    let length = 0;
-    for(let i=0; i<seq.length; i++){
-      const hit = rayBoundary(p, dir);
-      if(!hit){ valid = false; mismatches.push(`no encontró ${railNames[seq[i]]}`); break; }
-      points.push(hit.point);
-      length += dist(p, hit.point);
-      hitRails.push(hit.rail);
-      if(hit.rail !== seq[i]){
-        valid = false;
-        mismatches.push(`esperaba ${railNames[seq[i]]}, pero la línea llega primero a ${railNames[hit.rail]}`);
-      }
-      dir = reflectDir(dir, hit.rail);
-      p = add(hit.point, mul(dir, 1e-5));
-    }
-    points.push({...target});
-    length += dist(points[points.length-2], target);
-    const attack = points.length > 1 ? points[1] : null;
-    return {valid, points, attack, virtual, hitRails, mismatches, length, seq};
-  }
+                els.score1.textContent = state.inningScore1; els.score2.textContent = state.inningScore2;
+                els.total1.textContent = state.score1; els.total2.textContent = state.score2;
 
-  function railCoord(p, rail){
-    // En esta versión, el número LKL coincide con la ubicación física:
-    // 10 = primer diamante, 20 = segundo diamante, etc.
-    if(rail==='top' || rail==='bottom') return p.x; // bandas largas: 0 a 80
-    return p.y; // bandas cortas: 0 a 40
-  }
-  function pointFromRailCoord(coord, rail){
-    const max = (rail==='top' || rail==='bottom') ? TABLE.W : TABLE.H;
-    const c = clamp(coord, 0, max);
-    if(rail==='top') return {x:c, y:0};
-    if(rail==='bottom') return {x:c, y:TABLE.H};
-    if(rail==='left') return {x:0, y:c};
-    return {x:TABLE.W, y:c};
-  }
-  function shiftAttack(p, rail, points){
-    if(!p) return null;
-    if(rail==='top' || rail==='bottom') return {x:clamp(p.x + points, 0.1, TABLE.W-0.1), y:p.y};
-    return {x:p.x, y:clamp(p.y + points, 0.1, TABLE.H-0.1)};
-  }
+                els.p1Panel.classList.remove('player-active', 'player-active-bg', 'player-inactive-bg');
+                els.p2Panel.classList.remove('player-active', 'player-active-bg', 'player-inactive-bg');
 
-  function controls(){
-    return {
-      mode: ids('mode').value,
-      firstBall: ids('firstBall').value,
-      rail1: ids('rail1').value,
-      rail2: ids('rail2').value,
-      thirdRail: ids('thirdRail').value,
-      english: ids('english').value,
-      tips: parseFloat(ids('tips').value),
-      tipMm: parseFloat(ids('tipMm').value),
-      stroke: ids('stroke').value,
-      effectGain: parseFloat(ids('effectGain').value),
-      strokeGain: parseFloat(ids('strokeGain').value),
-      clothBias: parseFloat(ids('clothBias').value)
-    };
-  }
+                if (state.currentPlayer === 1) {
+                    els.p1Panel.classList.add('player-active', 'player-active-bg');
+                    els.p2Panel.classList.add('player-inactive-bg');
+                } else if (state.numPlayers === 2) {
+                    els.p2Panel.classList.add('player-active', 'player-active-bg');
+                    els.p1Panel.classList.add('player-inactive-bg');
+                }
 
-  function strokeDelta(stroke){
-    if(stroke==='long') return 1;
-    if(stroke==='short') return -0.65;
-    return -0.15;
-  }
-  function strokeText(stroke){
-    if(stroke==='long') return 'penetrado largo';
-    if(stroke==='short') return 'penetrado corto';
-    return 'seco';
-  }
-  function englishSign(english){
-    if(english==='positive') return 1;
-    if(english==='negative') return -1;
-    return 0;
-  }
-  function englishText(english){
-    if(english==='positive') return 'positivo, abre/alarga';
-    if(english==='negative') return 'negativo, cierra/acorta';
-    return 'sin efecto lateral';
-  }
+                if (state.numPlayers === 1) {
+                    els.p2Panel.classList.add('hidden');
+                    els.p1Panel.classList.remove('w-1/2'); els.p1Panel.classList.add('w-full', 'border-r-0');
+                } else {
+                    els.p2Panel.classList.remove('hidden');
+                    els.p1Panel.classList.remove('w-full', 'border-r-0'); els.p1Panel.classList.add('w-1/2', 'border-r-2');
+                }
 
-  function chooseThirdRail(start, target, c){
-    const candidates = [];
-    const baseSeq = [c.rail1, c.rail2];
-    const possible = c.thirdRail === 'auto' ? rails : (c.thirdRail === 'none' ? [null] : [c.thirdRail]);
-    for(const r3 of possible){
-      const seq = r3 ? [...baseSeq, r3] : [...baseSeq];
-      const path = mirrorPath(start, target, seq);
-      const repeatedPenalty = r3 && r3 === c.rail2 ? 8 : 0;
-      const cornerPenalty = path.points.some(p => (p.x<1 || p.x>TABLE.W-1) && (p.y<1 || p.y>TABLE.H-1)) ? 12 : 0;
-      const validPenalty = path.valid ? 0 : 1000;
-      candidates.push({path, score:validPenalty + path.length*0.02 + repeatedPenalty + cornerPenalty});
-    }
-    candidates.sort((a,b)=>a.score-b.score);
-    return candidates[0].path;
-  }
+                els.inningsCompleted.textContent = state.innings; 
+                els.inningsCurrent.textContent = state.innings + 1; 
 
-  function classifyCut(angleDeg){
-    const a = Math.abs(angleDeg);
-    if(a < 15) return 'muy llena';
-    if(a < 32) return 'llena a 3/4';
-    if(a < 52) return 'media bola aproximada';
-    if(a < 72) return 'fina, cerca de 1/4';
-    if(a < 95) return 'muy fina o forzada';
-    return 'extrema: probablemente no natural';
-  }
+                // LOGICA DE PROMEDIO (DURANTE JUEGO)
+                // Mientras se juega, usamos las entradas completadas (state.innings).
+                // Pero si estamos en la primera entrada (0 completas), dividimos por 1 para no dividir por 0.
+                let p1Divisor, p2Divisor;
+                
+                // Si J1 está jugando, divide por completas. Si ya terminó (juega J2), divide por (completas + 1)
+                if (state.currentPlayer === 1) {
+                    p1Divisor = state.innings < 1 ? 1 : state.innings; 
+                } else {
+                    p1Divisor = state.innings + 1; 
+                }
 
-  function computeShot(){
-    const c = controls();
-    const neutralEnglish = c.english === 'neutral';
-    const effectLevelForDisplay = neutralEnglish ? 0 : c.tips;
-    const tipFractionsForDisplay = effectLevelForDisplay / 2;
-    const effectMmForDisplay = tipFractionsForDisplay * c.tipMm;
-    ids('tips').disabled = neutralEnglish;
-    ids('tipMm').disabled = neutralEnglish;
-    ids('tipsVal').textContent = `Efecto ${effectLevelForDisplay.toFixed(0)} = ${fmt(tipFractionsForDisplay,1)} punta${tipFractionsForDisplay === 1 ? '' : 's'} = ${fmt(effectMmForDisplay,1)} mm`;
-    ids('tipMmVal').textContent = `${fmt(c.tipMm,1)} mm`; 
-    ids('effectGainVal').textContent = `${fmt(c.effectGain,2)} pts`; 
-    ids('strokeGainVal').textContent = `${fmt(c.strokeGain,2)} pts`;
-    ids('clothBiasVal').textContent = `${fmt(c.clothBias,2)} pts`; 
-    ids('firstBallLabel').textContent = c.mode === 'ballFirst' ? 'Primera bola' : 'Bola objetivo después de bandas';
+                if (state.numPlayers === 2) {
+                    // Si J2 está jugando, sus completas son state.innings.
+                    if (state.currentPlayer === 2) {
+                        p2Divisor = state.innings < 1 ? 1 : state.innings;
+                    } else {
+                        // Si J1 está jugando, J2 completó las mismas entradas que marca state.innings
+                        p2Divisor = state.innings < 1 ? 1 : state.innings;
+                    }
+                } else {
+                    p2Divisor = 1;
+                }
 
-    const firstBall = c.firstBall;
-    const otherBall = firstBall === 'yellow' ? 'red' : 'yellow';
-    let start, target, cueLine = null, objectInfo = null;
-    if(c.mode === 'ballFirst'){
-      start = {...balls[firstBall]};
-      target = {...balls[otherBall]};
-      cueLine = {from:{...balls.white}, to:{...balls[firstBall]}};
-    } else {
-      start = {...balls.white};
-      target = {...balls[firstBall]};
-    }
+                els.avg1.textContent = calcAvg(state.score1, p1Divisor);
+                els.avg2.textContent = calcAvg(state.score2, p2Divisor);
 
-    const path = chooseThirdRail(start, target, c);
-    const rawAttack = path.attack;
-    const effectLevel = c.english === 'neutral' ? 0 : c.tips; // valores discretos 0, 1, 2, 3, 4
-    const effectiveTips = effectLevel / 2; // 1 = media punta, 2 = una punta, 3 = punta y media, 4 = dos puntas
-    const effectOffsetMm = effectiveTips * c.tipMm;
-    const correctionPoints = englishSign(c.english) * effectiveTips * c.effectGain + strokeDelta(c.stroke) * c.strokeGain + c.clothBias;
-    const attackCorrected = shiftAttack(rawAttack, c.rail1, correctionPoints);
-    const attackRawCoord = rawAttack ? railCoord(rawAttack, c.rail1) : NaN;
-    const attackCorrCoord = attackCorrected ? railCoord(attackCorrected, c.rail1) : NaN;
-    const salida = railCoord(start, c.rail1);
-    const llegada = salida - attackCorrCoord;
+                const pBtn = document.getElementById('pause-timer-btn');
+                pBtn.innerHTML = state.isPaused ? `<span class="text-4xl mb-1">▶</span><span class="text-base">Reanudar</span>` : `<span class="text-4xl mb-1">⏸</span><span class="text-base">Pausa</span>`;
+                pBtn.className = state.isPaused ? "bg-green-600 hover:bg-green-500 text-white font-bold h-full px-6 rounded-2xl shadow-xl active:scale-95 transition flex flex-col items-center justify-center border-t-2 border-green-400 w-28" : "bg-gradient-to-b from-yellow-600 to-yellow-800 hover:from-yellow-500 hover:to-yellow-700 text-white font-bold h-full px-6 rounded-2xl shadow-xl active:scale-95 transition flex flex-col items-center justify-center text-lg uppercase border-t-2 border-yellow-500 w-28";
+            }
 
-    if(c.mode === 'ballFirst' && rawAttack){
-      const incoming = norm(sub(balls[firstBall], balls.white));
-      const outgoing = norm(sub(rawAttack, balls[firstBall]));
-      const ang = signedAngle(incoming, outgoing) * 180/Math.PI;
-      objectInfo = {
-        angle: ang,
-        cut: classifyCut(ang),
-        side: ang >= 0 ? 'hacia la izquierda de la línea de entrada' : 'hacia la derecha de la línea de entrada'
-      };
-    }
+            function finishGame(reason) {
+                if(!state.isPaused) { state.isPaused = true; state.pauseStartTime = Date.now(); }
+                clearInterval(state.shotClockInterval);
+                
+                // LOGICA FINAL CORREGIDA: DIVIDIR POR ENTRADAS COMPLETADAS
+                // Usamos state.innings como base (las completas que se ven en la barra gris).
+                let completedInnings = state.innings;
+                
+                // EXCEPCIÓN: Si alguien ganó (llegó a la meta), esa entrada cuenta como completada para él.
+                // Si la partida se abortó manualmente ("Salir" o "Fin"), usamos las completadas estrictas.
+                
+                let p1Divisor = completedInnings;
+                let p2Divisor = completedInnings;
 
-    lastShot = {c, path, rawAttack, attackCorrected, attackRawCoord, attackCorrCoord, salida, llegada, correctionPoints, effectOffsetMm, effectiveTips, effectLevel, cueLine, objectInfo, start, target, firstBall, otherBall};
-    renderResult(lastShot);
-    return lastShot;
-  }
+                // Ajuste si alguien ganó (Meta alcanzada)
+                if (reason === "¡Meta Alcanzada!") {
+                    // Si J1 ganó, él completó la entrada actual.
+                    if (state.currentPlayer === 1) p1Divisor = state.innings + 1;
+                    // Si J2 ganó, ambos completaron la entrada actual.
+                    if (state.currentPlayer === 2) {
+                        p1Divisor = state.innings + 1;
+                        p2Divisor = state.innings + 1;
+                    }
+                }
+                
+                // Evitar división por cero
+                if (p1Divisor < 1) p1Divisor = 1;
+                if (p2Divisor < 1) p2Divisor = 1;
+                
+                // Para mostrar "Entradas Jugadas" en el reporte, usamos el máximo de los dos
+                let totalInningsReport = Math.max(p1Divisor, p2Divisor);
 
-  function renderResult(s){
-    const c = s.c;
-    const result = ids('result');
-    const routeNames = s.path.seq.map(r => railNames[r]).join(' → ');
-    const warning = !s.path.valid ? `<p class="bad"><b>Advertencia:</b> la geometría pura no encuentra una ruta limpia con esa secuencia. ${s.path.mismatches.join('; ')}. Pruebe otra segunda/tercera banda o mueva ligeramente las bolas.</p>` : `<p class="good"><b>Ruta geométrica válida:</b> ${routeNames}.</p>`;
-    const modeText = c.mode === 'ballFirst'
-      ? `Blanca → ${ballNames[s.firstBall]} → ${routeNames} → ${ballNames[s.otherBall]}`
-      : `Blanca → ${routeNames} → ${ballNames[s.firstBall]}`;
-    const strikeText = c.mode === 'ballFirst'
-      ? `<p><b>Por dónde tacar:</b> dirija la blanca a la <b>${ballNames[s.firstBall]}</b> para que, después del contacto, salga <b>${s.objectInfo?.side || '—'}</b>. Cantidad de bola estimada: <b>${s.objectInfo?.cut || '—'}</b> <span class="mono">(${fmt(s.objectInfo?.angle || 0,1)}°)</span>.</p>`
-      : `<p><b>Por dónde tacar:</b> envíe la blanca directamente al punto de ataque marcado sobre la <b>${railNames[c.rail1]}</b>.</p>`;
-    const difficult = s.objectInfo && Math.abs(s.objectInfo.angle) > 75
-      ? `<p class="warn"><b>Tiro delicado:</b> el ángulo de salida después de la primera bola es grande. En mesa real puede exigir una cantidad muy fina, efecto dominante o un cambio de bola/banda.</p>` : '';
-    result.innerHTML = `
-      <h2>Resultado calculado</h2>
-      <p><span class="pill">${modeText}</span></p>
-      ${warning}
-      <p><b>Punto de ataque base:</b> ${railNames[c.rail1]}, punto LKL <span class="mono">${fmt(s.attackRawCoord,2)}</span>.</p>
-      <p><b>Punto de ataque corregido:</b> ${railNames[c.rail1]}, punto LKL <span class="mono">${fmt(s.attackCorrCoord,2)}</span>. Corrección aplicada: <span class="mono">${fmt(s.correctionPoints,2)}</span> puntos LKL.</p>
-      <p><b>Lectura LKL interna:</b> salida <span class="mono">${fmt(s.salida,2)}</span>, llegada <span class="mono">${fmt(s.llegada,2)}</span>, ataque = salida − llegada = <span class="mono">${fmt(s.attackCorrCoord,2)}</span>.</p>
-      <p><b>Efecto:</b> ${englishText(c.english)}. Nivel <span class="mono">${s.effectLevel}</span>: <span class="mono">${fmt(s.effectiveTips,1)}</span> punta${s.effectiveTips === 1 ? '' : 's'}, equivalente a <span class="mono">${fmt(s.effectOffsetMm,1)} mm</span> desde el centro, usando una punta real de <span class="mono">${fmt(c.tipMm,1)} mm</span>. <b>Golpe:</b> ${strokeText(c.stroke)}.</p>
-      ${strikeText}
-      ${difficult}
-      <p class="small">La línea azul muestra la ruta geométrica ideal. El círculo dorado muestra el ataque corregido por efecto, golpe y calibración. Si la mesa real no coincide, ajuste primero el sesgo del paño y luego la corrección por punta de efecto.</p>
-    `;
-  }
+                const tSeconds = Math.floor(((state.pauseStartTime||Date.now()) - state.startTime - state.pausedTime)/1000);
+                
+                const modal = document.getElementById('confirmation-modal');
+                const content = document.getElementById('modal-content');
+                document.getElementById('modal-title').textContent = "Partida Finalizada";
+                let html = `
+                    <div class="text-center mb-4 text-yellow-400 font-bold border-b border-gray-600 pb-2">${reason||""}</div>
+                    <div class="flex justify-between text-sm mb-4">
+                        <span>⏱ ${formatTime(tSeconds)}</span>
+                        <span>Entradas Jugadas: <b>${totalInningsReport}</b></span>
+                    </div>
+                    <div class="bg-black/30 p-3 rounded mb-2">
+                        <div class="flex items-center gap-2 mb-1"><img src="${getFlagUrl(state.player1Flag)}" class="h-4"><strong class="text-yellow-200">${els.p1Name.value}</strong></div>
+                        <div class="grid grid-cols-2 text-sm gap-y-1"><span>Car: <b>${state.score1}</b></span><span>Prom: <b>${calcAvg(state.score1, p1Divisor)}</b></span><span>Mayor: <b>${state.highRun1}</b></span><span>Ceros: <b>${state.zeros1}</b></span></div>
+                    </div>
+                `;
+                if(state.numPlayers===2){
+                    html += `<div class="bg-black/30 p-3 rounded">
+                        <div class="flex items-center gap-2 mb-1"><img src="${getFlagUrl(state.player2Flag)}" class="h-4"><strong class="text-yellow-200">${els.p2Name.value}</strong></div>
+                        <div class="grid grid-cols-2 text-sm gap-y-1"><span>Car: <b>${state.score2}</b></span><span>Prom: <b>${calcAvg(state.score2, p2Divisor)}</b></span><span>Mayor: <b>${state.highRun2}</b></span><span>Ceros: <b>${state.zeros2}</b></span></div>
+                    </div>`;
+                }
+                content.innerHTML = html;
+                document.getElementById('modal-cancel-btn').style.display = 'none';
+                document.getElementById('modal-confirm-btn').textContent = "Cerrar";
+                document.getElementById('modal-confirm-btn').onclick = () => { modal.classList.add('hidden'); };
+                modal.classList.remove('hidden');
+            }
 
-  function drawTable(){
-    ctx.clearRect(0,0,geom.w,geom.h);
-    const x = geom.ox, y = geom.oy, w = TABLE.W*geom.scale, h = TABLE.H*geom.scale;
-    const rail = Math.max(18, geom.scale*3.0);
-    ctx.save();
-    ctx.shadowColor = 'rgba(0,0,0,.5)'; ctx.shadowBlur = 28; ctx.shadowOffsetY = 14;
-    roundRect(ctx, x-rail, y-rail, w+rail*2, h+rail*2, 22); 
-    const grdRail = ctx.createLinearGradient(x,y-rail,x,y+h+rail);
-    grdRail.addColorStop(0,'#8b5a2b'); grdRail.addColorStop(.5,'#4d2a18'); grdRail.addColorStop(1,'#8b5a2b');
-    ctx.fillStyle = grdRail; ctx.fill();
-    ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
-    roundRect(ctx, x, y, w, h, 13);
-    const grd = ctx.createRadialGradient(x+w*.35, y+h*.25, 10, x+w*.5, y+h*.55, w*.75);
-    grd.addColorStop(0, '#1f7c48'); grd.addColorStop(1, '#0e4b2d');
-    ctx.fillStyle = grd; ctx.fill();
-    ctx.strokeStyle='rgba(255,255,255,.18)'; ctx.lineWidth=1;
-    ctx.stroke();
+            function addPoint(p) {
+                const prev = JSON.parse(JSON.stringify(state)); prev.timerInterval=null; prev.shotClockInterval=null;
+                if(history.length>50) history.shift(); history.push(prev);
 
-    drawDiamonds(x,y,w,h,rail);
-    ctx.restore();
-  }
+                if(p===1) {
+                    state.score1++; state.inningScore1++; state.currentPlayer=1;
+                    if(state.inningScore1 > state.highRun1) state.highRun1 = state.inningScore1;
+                    if(state.targetScore>0 && state.score1>=state.targetScore) setTimeout(()=>finishGame("¡Meta Alcanzada!"),100);
+                } else {
+                    state.score2++; state.inningScore2++; state.currentPlayer=2;
+                    if(state.inningScore2 > state.highRun2) state.highRun2 = state.inningScore2;
+                    if(state.targetScore>0 && state.score2>=state.targetScore) setTimeout(()=>finishGame("¡Meta Alcanzada!"),100);
+                }
+                runTimer(); updateUI();
+            }
 
-  function drawDiamonds(x,y,w,h,rail){
-    ctx.save();
-    ctx.fillStyle = '#f4d28b';
-    ctx.strokeStyle = 'rgba(0,0,0,.45)';
-    ctx.lineWidth = 1;
-    const r = Math.max(3, geom.scale*.35);
-    for(let i=0; i<=8; i++){
-      const px = x + w*i/8;
-      diamond(px, y-rail*.48, r);
-      diamond(px, y+h+rail*.48, r);
-    }
-    for(let i=0; i<=4; i++){
-      const py = y + h*i/4;
-      diamond(x-rail*.48, py, r);
-      diamond(x+w+rail*.48, py, r);
-    }
-    ctx.fillStyle = 'rgba(244,210,139,.75)';
-    ctx.font = `${Math.max(10, geom.scale*1.2)}px ui-monospace, monospace`;
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    for(let n=0; n<=80; n+=10){
-      const px = x + w*(n/80);
-      ctx.fillText(String(n), px, y-rail*.78);
-      ctx.fillText(String(n), px, y+h+rail*.78);
-    }
-    ctx.textAlign = 'center';
-    for(let n=0; n<=40; n+=10){
-      const py = y + h*(n/40);
-      ctx.fillText(String(n), x-rail*.78, py);
-      ctx.fillText(String(n), x+w+rail*.78, py);
-    }
-    ctx.restore();
-  }
+            function nextInning() {
+                const prev = JSON.parse(JSON.stringify(state)); prev.timerInterval=null; prev.shotClockInterval=null;
+                if(history.length>50) history.shift(); history.push(prev);
 
-  function diamond(x,y,r){
-    ctx.beginPath();
-    ctx.moveTo(x, y-r); ctx.lineTo(x+r, y); ctx.lineTo(x, y+r); ctx.lineTo(x-r, y); ctx.closePath();
-    ctx.fill(); ctx.stroke();
-  }
+                if(state.currentPlayer===1) { if(state.inningScore1===0) state.zeros1++; }
+                else { if(state.inningScore2===0) state.zeros2++; }
 
-  function drawPath(s){
-    if(!s || !s.path || s.path.points.length < 2) return;
-    ctx.save();
-    // Route from white to first object in ball-first mode
-    if(s.cueLine){
-      const a = worldToScreen(s.cueLine.from), b = worldToScreen(s.cueLine.to);
-      ctx.setLineDash([7,7]);
-      ctx.strokeStyle='rgba(255,255,255,.55)'; ctx.lineWidth=2.2;
-      ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
-      ctx.setLineDash([]);
-    }
+                state.inningScore1 = 0; state.inningScore2 = 0;
 
-    // Ideal geometric route
-    ctx.strokeStyle = '#62d7ff';
-    ctx.lineWidth = 3.5;
-    ctx.lineJoin = 'round'; ctx.lineCap = 'round';
-    ctx.shadowColor = 'rgba(98,215,255,.35)'; ctx.shadowBlur = 12;
-    ctx.beginPath();
-    s.path.points.forEach((p,i)=>{ const q=worldToScreen(p); if(i===0) ctx.moveTo(q.x,q.y); else ctx.lineTo(q.x,q.y); });
-    ctx.stroke();
-    ctx.shadowBlur = 0;
+                if(state.numPlayers===1) { state.innings++; } 
+                else { if(state.currentPlayer===1) state.currentPlayer=2; else { state.currentPlayer=1; state.innings++; } }
 
-    // Raw attack marker
-    if(s.rawAttack){
-      const q = worldToScreen(s.rawAttack);
-      ctx.fillStyle = '#62d7ff'; ctx.globalAlpha = .7;
-      ctx.beginPath(); ctx.arc(q.x,q.y,6,0,Math.PI*2); ctx.fill();
-      ctx.globalAlpha = 1;
-    }
+                runTimer(); resetShot(); updateUI();
+                if(state.targetInnings>0 && state.innings>=state.targetInnings) setTimeout(()=>finishGame("Límite de Entradas"),100);
+            }
 
-    // Corrected attack marker
-    if(s.attackCorrected){
-      const q = worldToScreen(s.attackCorrected);
-      ctx.strokeStyle = '#d6b26d'; ctx.fillStyle = 'rgba(214,178,109,.25)'; ctx.lineWidth=3;
-      ctx.shadowColor='rgba(214,178,109,.55)'; ctx.shadowBlur=15;
-      ctx.beginPath(); ctx.arc(q.x,q.y,12,0,Math.PI*2); ctx.fill(); ctx.stroke();
-      ctx.shadowBlur=0;
-      ctx.beginPath(); ctx.moveTo(q.x-15,q.y); ctx.lineTo(q.x+15,q.y); ctx.moveTo(q.x,q.y-15); ctx.lineTo(q.x,q.y+15); ctx.stroke();
-      ctx.font = `800 ${Math.max(12, geom.scale*1.3)}px ui-sans-serif, system-ui`;
-      ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
-      ctx.lineWidth = 4;
-      ctx.strokeStyle = 'rgba(0,0,0,.65)';
-      ctx.fillStyle = '#ffffff';
-      ctx.strokeText(`Ataque ${fmt(s.attackCorrCoord,1)}`, q.x+14, q.y-12);
-      ctx.fillText(`Ataque ${fmt(s.attackCorrCoord,1)}`, q.x+14, q.y-12);
-    }
-    ctx.restore();
-  }
+            document.getElementById('start-game-btn').onclick = () => {
+                state.numPlayers = parseInt(document.getElementById('num-players').value);
+                state.regulatoryTimer = (document.getElementById('regulatory-timer').value === 'yes');
+                state.player1Flag = document.getElementById('player1-country').value;
+                state.player2Flag = document.getElementById('player2-country').value;
+                state.targetScore = parseInt(document.getElementById('setup-target-score').value) || 0;
+                state.targetInnings = parseInt(document.getElementById('setup-target-innings').value) || 0;
+                
+                els.metaDist.textContent = state.targetScore > 0 ? state.targetScore : "∞";
+                els.metaLimit.textContent = state.targetInnings > 0 ? state.targetInnings : "∞";
 
-  function drawBalls(){
-    for(const key of ['white','yellow','red']){
-      const p = worldToScreen(balls[key]);
-      const r = BALL_R*geom.scale;
-      ctx.save();
-      ctx.shadowColor = 'rgba(0,0,0,.45)'; ctx.shadowBlur = 10; ctx.shadowOffsetY=4;
-      const g = ctx.createRadialGradient(p.x-r*.35, p.y-r*.45, r*.1, p.x, p.y, r);
-      g.addColorStop(0, '#fff');
-      g.addColorStop(.22, colors[key]);
-      g.addColorStop(1, key==='white' ? '#b9b4a8' : (key==='yellow' ? '#a77c00' : '#761c1a'));
-      ctx.fillStyle = g;
-      ctx.beginPath(); ctx.arc(p.x,p.y,r,0,Math.PI*2); ctx.fill();
-      ctx.strokeStyle='rgba(0,0,0,.45)'; ctx.lineWidth=1.4; ctx.stroke();
-      ctx.shadowBlur=0; ctx.shadowOffsetY=0;
-      ctx.fillStyle = key==='white' ? '#2b2b2b' : '#fff';
-      ctx.font = `700 ${Math.max(10, r*.65)}px ui-sans-serif, system-ui`;
-      ctx.textAlign='center'; ctx.textBaseline='middle';
-      ctx.fillText(key==='white'?'B':(key==='yellow'?'A':'R'), p.x, p.y);
-      ctx.restore();
-    }
-  }
+                els.setup.classList.add('hidden'); els.app.classList.remove('hidden');
+                if(audioCtx.state === 'suspended') audioCtx.resume();
+                
+                fitText(els.p1Name); fitText(els.p2Name);
 
-  function draw(){
-    drawTable();
-    const shot = computeShot();
-    drawPath(shot);
-    drawBalls();
-  }
+                state.startTime = Date.now();
+                runTimer(); resetShot(); updateUI();
+            };
 
-  function roundRect(ctx,x,y,w,h,r){
-    ctx.beginPath();
-    ctx.moveTo(x+r,y);
-    ctx.arcTo(x+w,y,x+w,y+h,r);
-    ctx.arcTo(x+w,y+h,x,y+h,r);
-    ctx.arcTo(x,y+h,x,y,r);
-    ctx.arcTo(x,y,x+w,y,r);
-    ctx.closePath();
-  }
+            document.getElementById('touch-area-1').onclick = () => addPoint(1);
+            document.getElementById('add-point-1').onclick = () => addPoint(1);
+            document.getElementById('touch-area-2').onclick = () => { if(state.numPlayers===2) addPoint(2); };
+            document.getElementById('add-point-2').onclick = () => { if(state.numPlayers===2) addPoint(2); };
+            document.getElementById('next-inning-btn').onclick = nextInning;
+            document.getElementById('init-timer-btn').onclick = resetShot;
+            document.getElementById('finish-game-btn').onclick = () => finishGame("Finalizado Manualmente");
+            
+            els.p1Name.addEventListener('input', () => fitText(els.p1Name));
+            els.p2Name.addEventListener('input', () => fitText(els.p2Name));
+            window.addEventListener('resize', () => { fitText(els.p1Name); fitText(els.p2Name); });
 
-  function onPointerDown(e){
-    const rect = canvas.getBoundingClientRect();
-    const p = screenToWorld(e.clientX-rect.left, e.clientY-rect.top);
-    let best = null;
-    for(const key of Object.keys(balls)){
-      const d = dist(p, balls[key]);
-      if(d < BALL_R*2.2 && (!best || d < best.d)) best = {key,d};
-    }
-    if(best){ dragKey = best.key; canvas.setPointerCapture(e.pointerId); }
-  }
-  function onPointerMove(e){
-    if(!dragKey) return;
-    const rect = canvas.getBoundingClientRect();
-    const p = screenToWorld(e.clientX-rect.left, e.clientY-rect.top);
-    balls[dragKey].x = clamp(p.x, BALL_R, TABLE.W-BALL_R);
-    balls[dragKey].y = clamp(p.y, BALL_R, TABLE.H-BALL_R);
-    draw();
-  }
-  function onPointerUp(e){ dragKey = null; try{ canvas.releasePointerCapture(e.pointerId); }catch{} }
-
-  canvas.addEventListener('pointerdown', onPointerDown);
-  canvas.addEventListener('pointermove', onPointerMove);
-  canvas.addEventListener('pointerup', onPointerUp);
-  canvas.addEventListener('pointercancel', onPointerUp);
-
-  let fsButtonDrag = null;
-  let fsBtnPos = {u:0.93, v:0.88}; // posición dentro del paño verde, en coordenadas normalizadas
-  function toggleFullscreen(){
-    const inNativeFullscreen = document.fullscreenElement === canvasWrap;
-    if(inNativeFullscreen){
-      document.exitFullscreen?.();
-      return;
-    }
-    if(canvasWrap.requestFullscreen){
-      canvasWrap.requestFullscreen().catch(() => {
-        canvasWrap.classList.toggle('pseudoFull');
-        setTimeout(resize, 80);
-      });
-    } else {
-      canvasWrap.classList.toggle('pseudoFull');
-      setTimeout(resize, 80);
-    }
-  }
-  fsBtn.addEventListener('pointerdown', e => {
-    fsButtonDrag = {x:e.clientX, y:e.clientY, moved:false};
-    fsBtn.setPointerCapture?.(e.pointerId);
-    e.preventDefault();
-  });
-  fsBtn.addEventListener('pointermove', e => {
-    if(!fsButtonDrag) return;
-    const dx = e.clientX - fsButtonDrag.x;
-    const dy = e.clientY - fsButtonDrag.y;
-    if(Math.hypot(dx,dy) > 4) fsButtonDrag.moved = true;
-    const wrapRect = canvasWrap.getBoundingClientRect();
-    const btnRect = fsBtn.getBoundingClientRect();
-    const left = clamp(btnRect.left - wrapRect.left + dx, geom.ox + 8, geom.ox + TABLE.W*geom.scale - btnRect.width - 8);
-    const top = clamp(btnRect.top - wrapRect.top + dy, geom.oy + 8, geom.oy + TABLE.H*geom.scale - btnRect.height - 8);
-    fsBtnPos.u = clamp((left + btnRect.width/2 - geom.ox) / (TABLE.W*geom.scale), 0.04, 0.96);
-    fsBtnPos.v = clamp((top + btnRect.height/2 - geom.oy) / (TABLE.H*geom.scale), 0.06, 0.94);
-    positionFsButton();
-    fsButtonDrag.x = e.clientX;
-    fsButtonDrag.y = e.clientY;
-  });
-  fsBtn.addEventListener('pointerup', e => {
-    if(!fsButtonDrag?.moved) toggleFullscreen();
-    fsButtonDrag = null;
-    fsBtn.releasePointerCapture?.(e.pointerId);
-  });
-  document.addEventListener('fullscreenchange', () => {
-    if(document.fullscreenElement !== canvasWrap) canvasWrap.classList.remove('pseudoFull');
-    setTimeout(() => { resize(); positionFsButton(); }, 80);
-  });
-  window.addEventListener('orientationchange', () => setTimeout(resize, 200));
-
-  function updateFsButtonLabel(){
-    fsBtn.textContent = (document.fullscreenElement === canvasWrap || canvasWrap.classList.contains('pseudoFull')) ? 'FS' : 'FS';
-  }
-
-  function positionFsButton(){
-    if(!geom || !geom.scale) return;
-    const bw = fsBtn.offsetWidth || 84;
-    const bh = fsBtn.offsetHeight || 64;
-    const pad = Math.max(8, geom.scale * 0.7);
-    const minX = geom.ox + pad;
-    const maxX = geom.ox + TABLE.W * geom.scale - bw - pad;
-    const minY = geom.oy + pad;
-    const maxY = geom.oy + TABLE.H * geom.scale - bh - pad;
-    const x = clamp(geom.ox + fsBtnPos.u * TABLE.W * geom.scale - bw / 2, minX, maxX);
-    const y = clamp(geom.oy + fsBtnPos.v * TABLE.H * geom.scale - bh / 2, minY, maxY);
-    fsBtn.style.left = `${x}px`;
-    fsBtn.style.top = `${y}px`;
-    fsBtn.style.right = 'auto';
-    fsBtn.style.bottom = 'auto';
-    updateFsButtonLabel();
-  }
-
-  document.querySelectorAll('select,input').forEach(el => el.addEventListener('input', draw));
-  ids('recalc').addEventListener('click', draw);
-  ids('reset').addEventListener('click', () => { balls = JSON.parse(JSON.stringify(initialBalls)); draw(); });
-
-  resize();
-})();
-</script>
+            document.getElementById('undo-point-1').onclick = () => {
+               if(state.score1>0 && state.inningScore1>0) {
+                   const prev = JSON.parse(JSON.stringify(state)); if(history.length>50) history.shift(); history.push(prev);
+                   state.score1--; state.inningScore1--; updateUI();
+               }
+            };
+            document.getElementById('undo-point-2').onclick = () => {
+               if(state.numPlayers===2 && state.score2>0 && state.inningScore2>0) {
+                   const prev = JSON.parse(JSON.stringify(state)); if(history.length>50) history.shift(); history.push(prev);
+                   state.score2--; state.inningScore2--; updateUI();
+               }
+            };
+            document.getElementById('undo-btn').onclick = () => {
+                if(history.length>0) { const h = history.pop(); Object.assign(state, h); state.isPaused = false; runTimer(); updateUI(); }
+            };
+            document.getElementById('pause-timer-btn').onclick = () => {
+                if(!state.startTime) return;
+                state.isPaused = !state.isPaused;
+                if(state.isPaused) state.pauseStartTime = Date.now(); else { state.pausedTime += (Date.now() - state.pauseStartTime); state.pauseStartTime = null; }
+                updateUI();
+            };
+            document.getElementById('reset-btn').onclick = () => {
+                const modal = document.getElementById('confirmation-modal');
+                document.getElementById('modal-title').textContent = "¿Salir?";
+                document.getElementById('modal-content').innerHTML = "Perderás el progreso actual.";
+                document.getElementById('modal-cancel-btn').style.display = 'block';
+                document.getElementById('modal-confirm-btn').textContent = "Confirmar";
+                document.getElementById('modal-confirm-btn').onclick = () => {
+                    clearInterval(state.shotClockInterval); clearInterval(state.timerInterval);
+                    els.app.classList.add('hidden'); els.setup.classList.remove('hidden'); modal.classList.add('hidden');
+                    state = {
+                        score1: 0, score2: 0, inningScore1: 0, inningScore2: 0, innings: 0, currentPlayer: 1, 
+                        startTime: null, timerInterval: null, numPlayers: state.numPlayers, regulatoryTimer: state.regulatoryTimer, 
+                        isPaused: false, pausedTime: 0, pauseStartTime: null, targetScore: 40, targetInnings: 50,
+                        player1Flag: state.player1Flag, player2Flag: state.player2Flag, highRun1: 0, highRun2: 0, zeros1: 0, zeros2: 0,
+                        shotClockTime: 0, shotClockInterval: null
+                    };
+                    history = []; els.timer.textContent = "00:00:00";
+                };
+                modal.classList.remove('hidden');
+                document.getElementById('modal-cancel-btn').onclick = () => modal.classList.add('hidden');
+            };
+        });
+    </script>
 </body>
 </html>
