@@ -100,7 +100,7 @@
                 </select>
             </div>
 
-            <div class="mb-5">
+            <div id="shot-clock-setup-container" class="mb-5">
                 <label class="block text-gray-400 text-xs uppercase tracking-widest font-bold mb-2">Reloj de Tiro</label>
                 <select id="regulatory-timer" class="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-600 focus:border-yellow-400 focus:outline-none text-lg">
                     <option value="yes" selected>Reglamentario (40s)</option>
@@ -332,12 +332,23 @@
 
             const numPlayersSelect = document.getElementById('num-players');
             const p2SetupContainer = document.getElementById('player2-setup-container');
-            function toggleP2Setup() {
-                if(numPlayersSelect.value === '1') p2SetupContainer.classList.add('hidden');
-                else p2SetupContainer.classList.remove('hidden');
+            const shotClockSetupContainer = document.getElementById('shot-clock-setup-container');
+            const regulatoryTimerSelect = document.getElementById('regulatory-timer');
+            let matchTimerChoice = regulatoryTimerSelect.value;
+
+            function updateSetupForPlayers() {
+                const isPractice = numPlayersSelect.value === '1';
+                p2SetupContainer.classList.toggle('hidden', isPractice);
+                shotClockSetupContainer.classList.toggle('hidden', isPractice);
+                regulatoryTimerSelect.disabled = isPractice;
+                // En práctica el reloj siempre es libre; conservar la elección de la partida.
+                regulatoryTimerSelect.value = isPractice ? 'no' : matchTimerChoice;
             }
-            numPlayersSelect.addEventListener('change', toggleP2Setup);
-            toggleP2Setup(); 
+            regulatoryTimerSelect.addEventListener('change', () => {
+                if (numPlayersSelect.value === '2') matchTimerChoice = regulatoryTimerSelect.value;
+            });
+            numPlayersSelect.addEventListener('change', updateSetupForPlayers);
+            updateSetupForPlayers(); 
 
             let state = {
                 score1: 0, score2: 0, inningScore1: 0, inningScore2: 0, innings: 0, currentPlayer: 1, 
@@ -615,7 +626,7 @@
 
             document.getElementById('start-game-btn').onclick = () => {
                 state.numPlayers = parseInt(document.getElementById('num-players').value);
-                state.regulatoryTimer = (document.getElementById('regulatory-timer').value === 'yes');
+                state.regulatoryTimer = state.numPlayers === 2 && regulatoryTimerSelect.value === 'yes';
                 state.player1Flag = document.getElementById('player1-country').value;
                 state.player2Flag = document.getElementById('player2-country').value;
                 state.targetScore = parseInt(document.getElementById('setup-target-score').value) || 0;
