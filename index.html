@@ -358,6 +358,9 @@
                 shotClockTime: 0, shotClockInterval: null
             };
             let history = [];
+            const TURN_CHANGE_GUARD_MS = 800;
+            // Fuera del historial: deshacer no debe reactivar una pulsación accidental.
+            let lastTurnChangeAt = -Infinity;
             const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
             const els = {
@@ -531,7 +534,7 @@
                 pBtn.className = state.isPaused ? "bg-green-600 hover:bg-green-500 text-white font-bold h-full px-6 rounded-2xl shadow-xl active:scale-95 transition flex flex-col items-center justify-center border-t-2 border-green-400 w-28" : "bg-gradient-to-b from-yellow-600 to-yellow-800 hover:from-yellow-500 hover:to-yellow-700 text-white font-bold h-full px-6 rounded-2xl shadow-xl active:scale-95 transition flex flex-col items-center justify-center text-lg uppercase border-t-2 border-yellow-500 w-28";
             }
 
-            function finishGame(reason) {
+            function finishGame(reason, scoringPlayer = state.currentPlayer) {
                 if(!state.isPaused) { state.isPaused = true; state.pauseStartTime = Date.now(); }
                 clearInterval(state.shotClockInterval);
                 
@@ -548,9 +551,9 @@
                 // Ajuste si alguien ganó (Meta alcanzada)
                 if (reason === "¡Meta Alcanzada!") {
                     // Si J1 ganó, él completó la entrada actual.
-                    if (state.currentPlayer === 1) p1Divisor = state.innings + 1;
+                    if (scoringPlayer === 1) p1Divisor = state.innings + 1;
                     // Si J2 ganó, ambos completaron la entrada actual.
-                    if (state.currentPlayer === 2) {
+                    if (scoringPlayer === 2) {
                         p1Divisor = state.innings + 1;
                         p2Divisor = state.innings + 1;
                     }
@@ -597,18 +600,22 @@
                 if(history.length>50) history.shift(); history.push(prev);
 
                 if(p===1) {
-                    state.score1++; state.inningScore1++; state.currentPlayer=1;
+                    state.score1++; state.inningScore1++; // Anotar no cambia el turno.
                     if(state.inningScore1 > state.highRun1) state.highRun1 = state.inningScore1;
-                    if(state.targetScore>0 && state.score1>=state.targetScore) setTimeout(()=>finishGame("¡Meta Alcanzada!"),100);
+                    if(state.targetScore>0 && state.score1>=state.targetScore) setTimeout(()=>finishGame("¡Meta Alcanzada!", p),100);
                 } else {
-                    state.score2++; state.inningScore2++; state.currentPlayer=2;
+                    state.score2++; state.inningScore2++; // Anotar no cambia el turno.
                     if(state.inningScore2 > state.highRun2) state.highRun2 = state.inningScore2;
-                    if(state.targetScore>0 && state.score2>=state.targetScore) setTimeout(()=>finishGame("¡Meta Alcanzada!"),100);
+                    if(state.targetScore>0 && state.score2>=state.targetScore) setTimeout(()=>finishGame("¡Meta Alcanzada!", p),100);
                 }
                 runTimer(); updateUI();
             }
 
-            function nextInning() {
+            function nextInning(event) {
+                const now = performance.now();
+                // Un doble clic o toque rápido cuenta como un solo cambio de turno.
+                if ((event && event.detail > 1) || now - lastTurnChangeAt < TURN_CHANGE_GUARD_MS) return false;
+                lastTurnChangeAt = now;
                 const prev = JSON.parse(JSON.stringify(state)); prev.timerInterval=null; prev.shotClockInterval=null;
                 if(history.length>50) history.shift(); history.push(prev);
 
@@ -622,9 +629,11 @@
 
                 runTimer(); resetShot(); updateUI();
                 if(state.targetInnings>0 && state.innings>=state.targetInnings) setTimeout(()=>finishGame("Límite de Entradas"),100);
+                return true;
             }
 
             document.getElementById('start-game-btn').onclick = () => {
+                lastTurnChangeAt = -Infinity;
                 state.numPlayers = parseInt(document.getElementById('num-players').value);
                 state.regulatoryTimer = state.numPlayers === 2 && regulatoryTimerSelect.value === 'yes';
                 state.player1Flag = document.getElementById('player1-country').value;
@@ -649,9 +658,8 @@
             document.getElementById('add-point-1').onclick = () => addPoint(1);
             document.getElementById('touch-area-2').onclick = () => { if(state.numPlayers===2) addPoint(2); };
             document.getElementById('add-point-2').onclick = () => { if(state.numPlayers===2) addPoint(2); };
-            document.getElementById('next-inning-btn').onclick = () => {
-                nextInning();
-                playPracticeReminder();
+            document.getElementById('next-inning-btn').onclick = (event) => {
+                if (nextInning(event)) playPracticeReminder();
             };
             document.getElementById('init-timer-btn').onclick = resetShot;
             document.getElementById('finish-game-btn').onclick = () => {
